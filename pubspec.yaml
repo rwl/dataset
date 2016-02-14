@@ -1,0 +1,6 @@
+name: dataset
+description: Load, parse, sort, filter and query datasets
+dependencies:
+  intl: any
+  quiver: any
+  test: any

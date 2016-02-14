@@ -1,3 +1,11 @@
+.buildlog
 .DS_Store
-node_modules
-npm-debug.log
+.idea
+.pub/
+build/
+packages
+.packages
+pubspec.lock
+*.iml
+.project
+.settings/
