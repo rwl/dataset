@@ -1,6 +1,7 @@
 name: dataset
 description: Load, parse, sort, filter and query datasets
 dependencies:
+  benchmark_harness: any
   intl: any
   quiver: any
   test: any
