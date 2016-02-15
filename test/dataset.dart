@@ -1,556 +1,528 @@
 import 'package:test/test.dart';
 import 'package:dataset/dataset.dart';
+import 'helpers.dart' as util;
 
 datasetTest() {
   test("adding a row", () {
-    var ds = Util.baseSample();
-    ds.add({one: 10});
+    var ds = util.baseSample();
+    ds.add({'one': 10});
 
-    equals(ds._columns[1].data.length, 4, "row adding to 'one'");
-    ok(!_.isUndefined(ds._rowIdByPosition[3]), "rowIdByPosition updated");
-    _.each([2, 3], (i) {
-      equals(ds._columns[i].data.length, 4,
-          "column length increased on " + ds._columns[i].name);
-      strictEqual(ds._columns[i].data[3], null,
-          "null added to column " + ds._columns[i].name);
+    expect(ds._columns[1].data.length, equals(4),
+        reason: "row adding to 'one'");
+    expect(ds._rowIdByPosition, contains(3), reason: "rowIdByPosition updated");
+    [2, 3].forEach((i) {
+      expect(ds._columns[i].data.length, equals(4),
+          reason: "column length increased on ${ds._columns[i].name}");
+      expect(ds._columns[i].data[3], isNull,
+          reason: "null added to column ${ds._columns[i].name}");
     });
   });
 
   test("adding a row with custom idAttribute", () {
-    var ds = Util.baseSampleCustomID();
-    ds.add({one: 100});
+    var ds = util.baseSampleCustomID();
+    ds.add({'one': 100});
 
-    equals(ds._columns[1].data.length, 4, "row adding to 'one'");
-    ok(!_.isUndefined(ds._rowIdByPosition[3]), "rowIdByPosition updated");
-    _.each([1, 2], (i) {
-      equals(ds._columns[i].data.length, 4,
-          "column length increased on " + ds._columns[i].name);
-      strictEqual(ds._columns[i].data[3], null,
-          "null added to column " + ds._columns[i].name);
+    expect(ds._columns[1].data.length, equals(4),
+        reason: "row adding to 'one'");
+    expect(ds._rowIdByPosition, contains(3), reason: "rowIdByPosition updated");
+    [1, 2].forEach((i) {
+      expect(ds._columns[i].data.length, equals(4),
+          reason: "column length increased on ${ds._columns[i].name}");
+      expect(ds._columns[i].data[3], isNull,
+          reason: "null added to column ${ds._columns[i].name}");
     });
 
-    ok(_.isEqual(ds.rowById(100), {one: 100, two: null, three: null}));
+    expect(ds.rowById(100), equals({'one': 100, 'two': null, 'three': null}));
   });
 
   test("adding a row with wrong types", () {
-    var ds = Util.baseSample();
-    raises(() {
-      ds.add({one: 'a', two: 5, three: []});
-      ds.add({two: 5, three: []});
-      ds.add({three: []});
-      ds.add({one: 'a'});
-    });
+    var ds = util.baseSample();
+    expect(() {
+      ds.add({'one': 'a', 'two': 5, 'three': []});
+      ds.add({'two': 5, 'three': []});
+      ds.add({'three': []});
+      ds.add({'one': 'a'});
+    }, throws);
 
-    ds.add({one: 5});
-    equals(ds._columns[1].data.length, 4, "row adding to 'one'");
-    equals(ds._columns[2].data.length, 4, "row adding to 'two'");
-    equals(ds._columns[3].data.length, 4, "row adding to 'three'");
+    ds.add({'one': 5});
+    expect(ds._columns[1].data.length, equals(4),
+        reason: "row adding to 'one'");
+    expect(ds._columns[2].data.length, equals(4),
+        reason: "row adding to 'two'");
+    expect(ds._columns[3].data.length, equals(4),
+        reason: "row adding to 'three'");
   });
 
   test("removing a row with a function", () {
-    var ds = Util.baseSample();
+    var ds = util.baseSample();
     var firstRowId = ds._rowIdByPosition[0];
-    ds.remove((row) {
-      return (row.one == 1);
-    });
-    strictEqual(ds._rowPositionById[firstRowId], undefined);
-    ok(ds._rowIdByPosition[0] != firstRowId);
-    equals(ds.length, 2);
+    ds.remove((row) => row.one == 1);
+    expect(ds._rowPositionById, isNot(contains(firstRowId)));
+    expect(ds._rowIdByPosition[0], isNot(equals(firstRowId)));
+    expect(ds.length, equals(2));
   });
 
   test("removing a row with an id", () {
-    var ds = Util.baseSample();
+    var ds = util.baseSample();
     var firstRowId = ds._rowIdByPosition[0];
     ds.remove(firstRowId);
-    strictEqual(ds._rowPositionById[firstRowId], undefined);
-    ok(ds._rowIdByPosition[0] != firstRowId);
-    equals(ds.length, 2);
+    expect(ds._rowPositionById, isNot(contains(firstRowId)));
+    expect(ds._rowIdByPosition[0], isNot(equals(firstRowId)));
+    expect(ds.length, equals(2));
   });
 
   test("removing a row with an id with custom idAttribute", () {
-    var ds = Util.baseSampleCustomID();
+    var ds = util.baseSampleCustomID();
     var firstRowId = ds.rowByPosition(0).one;
 
     ds.remove(firstRowId);
-    strictEqual(ds._rowPositionById[firstRowId], undefined);
-    ok(ds._rowIdByPosition[0] != firstRowId);
-    equals(ds.length, 2);
+    expect(ds._rowPositionById, isNot(contains(firstRowId)));
+    expect(ds._rowIdByPosition[0], isNot(equals(firstRowId)));
+    expect(ds.length, equals(2));
   });
 
   test("updating a row with an incorrect type", () {
-    var ds = Util.baseSample();
-    _.each(['a', []], (value) {
-      raises(() {
-        ds.update({_id: ds._rowIdByPosition[0], one: value});
-      });
+    var ds = util.baseSample();
+    ['a', []].forEach((value) {
+      expect(() {
+        ds.update({'_id': ds._rowIdByPosition[0], 'one': value});
+      }, throws);
     });
   });
 
   test("updating a row", () {
-    var ds = Util.baseSample();
+    var ds = util.baseSample();
     ds._columns[1].type = 'mixed';
     var firstRowId = ds._rowIdByPosition[0];
-    _.each([100, 'a', null, undefined, []], (value) {
-      ds.update({_id: firstRowId, one: value});
-      equals(ds._columns[1].data[0], value, "value updated to " + value);
+    [100, 'a', null, []].forEach((value) {
+      ds.update({'_id': firstRowId, 'one': value});
+      expect(ds._columns[1].data[0], equals(value),
+          reason: "value updated to $value");
     });
   });
 
   test("updating multiple rows", () {
-    var ds = Util.baseSample();
+    var ds = util.baseSample();
     ds._columns[1].type = 'mixed';
     var firstRowId = ds._rowIdByPosition[0];
     var secondRowId = ds._rowIdByPosition[1];
-    _.each([100, 'a', null, undefined, []], (value) {
+    [100, 'a', null, []].forEach((value) {
       ds.update([
-        {_id: firstRowId, one: value},
-        {_id: secondRowId, one: value}
+        {'_id': firstRowId, 'one': value},
+        {'_id': secondRowId, 'one': value}
       ]);
-      equals(ds._columns[1].data[0], value, "value updated to " + value);
-      equals(ds._columns[1].data[1], value, "value updated to " + value);
+      expect(ds._columns[1].data[0], equals(value),
+          reason: "value updated to $value");
+      expect(ds._columns[1].data[1], equals(value),
+          reason: "value updated to $value");
     });
   });
 
   test("updating a row with custom idAttribute (non id column)", () {
-    var ds = Util.baseSampleCustomID();
+    var ds = util.baseSampleCustomID();
     ds._columns[1].type = 'mixed';
     var firstRowId = ds.rowByPosition(0).one;
 
-    _.each([100, 'a', null, undefined, []], (value) {
-      ds.update({one: firstRowId, two: value});
-      equals(ds._columns[1].data[0], value, "value updated to " + value);
+    [100, 'a', null, []].forEach((value) {
+      ds.update({'one': firstRowId, 'two': value});
+      expect(ds._columns[1].data[0], equals(value),
+          reason: "value updated to $value");
     });
   });
 
-  test("updating a row with a custom idAttribute (updating id col)", 1, () {
-    var ds = Util.baseSampleCustomID();
+  test("updating a row with a custom idAttribute (updating id col)", /*1,*/ () {
+    var ds = util.baseSampleCustomID();
 
-    raises(() {
-      ds.update({one: 99});
-    }, "You can't update the id column");
+    expect(() {
+      ds.update({'one': 99});
+    }, throws, reason: "You can't update the id column");
   });
 
   test("#105 - updating a row with a function", () {
-    var ds = Util.baseSample();
+    var ds = util.baseSample();
     ds.update((row) {
       return {
-        one: row.one % 2 == 0 ? 100 : 0,
-        two: row.two % 2 == 0 ? 100 : 0,
-        three: row.three % 2 == 0 ? 100 : 0,
-        _id: row._id
+        'one': row.one % 2 == 0 ? 100 : 0,
+        'two': row.two % 2 == 0 ? 100 : 0,
+        'three': row.three % 2 == 0 ? 100 : 0,
+        '_id': row._id
       };
     });
 
-    ok(_.isEqual(ds.column("one").data, [0, 100, 0]));
-    ok(_.isEqual(ds.column("two").data, [100, 0, 100]));
-    ok(_.isEqual(ds.column("three").data, [0, 100, 0]));
+    expect(ds.column("one").data, equals([0, 100, 0]));
+    expect(ds.column("two").data, equals([100, 0, 100]));
+    expect(ds.column("three").data, equals([0, 100, 0]));
   });
 
   test(
       "#105 - updating a row with a function skips a row when false is returned",
       () {
-    var ds = Util.baseSample();
+    var ds = util.baseSample();
     ds.update((row) {
       if (row.one == 1) {
         return false;
       }
       return {
-        one: row.one % 2 == 0 ? 100 : 0,
-        two: row.two % 2 == 0 ? 100 : 0,
-        three: row.three % 2 == 0 ? 100 : 0,
-        _id: row._id
+        'one': row.one % 2 == 0 ? 100 : 0,
+        'two': row.two % 2 == 0 ? 100 : 0,
+        'three': row.three % 2 == 0 ? 100 : 0,
+        '_id': row._id
       };
     });
 
-    ok(_.isEqual(ds.column("one").data, [1, 100, 0]));
-    ok(_.isEqual(ds.column("two").data, [4, 0, 100]));
-    ok(_.isEqual(ds.column("three").data, [7, 100, 0]));
+    expect(ds.column("one").data, equals([1, 100, 0]));
+    expect(ds.column("two").data, equals([4, 0, 100]));
+    expect(ds.column("three").data, equals([7, 100, 0]));
   });
 
   group("Computed Columns", () {
     test("Add computed column to empty dataset", () {
-      var ds = new Miso.Dataset({
-        data: {
-          columns: [
-            {name: "one", data: []},
-            {name: "two", data: []}
-          ]
-        },
-        strict: true
-      });
+      var ds = new Dataset(data: {
+        'columns': [
+          {'name': "one", 'data': []},
+          {'name': "two", 'data': []}
+        ]
+      }, strict: true);
 
-      ds.fetch().then(() {
-        ok(_.isEqual(ds.columnNames(), ["one", "two"]));
+      ds.fetch().then((_) {
+        expect(ds.columnNames(), equals(["one", "two"]));
 
         ds.addComputedColumn("three", "number", (row) {
-          return row.one + row.two;
+          return row['one'] + row['two'];
         });
 
-        ok(_.isEqual(ds.columnNames(), ["one", "two", "three"]));
+        expect(ds.columnNames(), equals(["one", "two", "three"]));
       });
     });
 
-    test("Add a computed column with a bogus type - should fail", 3, () {
-      var ds = new Miso.Dataset({
-        data: {
-          columns: [
-            {name: "one", data: []},
-            {name: "two", data: []}
-          ]
-        },
-        strict: true
-      });
+    test("Add a computed column with a bogus type - should fail", /*3,*/ () {
+      var ds = new Dataset(data: {
+        'columns': [
+          {'name': "one", 'data': []},
+          {'name': "two", 'data': []}
+        ]
+      }, strict: true);
 
-      ds.fetch().then(() {
-        ok(_.isEqual(ds.columnNames(), ["one", "two"]));
+      ds.fetch().then((_) {
+        expect(ds.columnNames(), equals(["one", "two"]));
 
-        raises(() {
+        expect(() {
           ds.addComputedColumn("three", "NOTYPE", (row) {
-            return row.one + row.two;
+            return row['one'] + row['two'];
           });
-        }, "The type NOTYPE doesn't exist");
+        }, throws, reason: "The type NOTYPE doesn't exist");
 
-        ok(_.isEqual(ds.columnNames(), ["one", "two"]));
+        expect(ds.columnNames(), equals(["one", "two"]));
       });
     });
 
-    test("Add a computed column with a name that already exists", 3, () {
-      var ds = new Miso.Dataset({
-        data: {
-          columns: [
-            {name: "one", data: []},
-            {name: "two", data: []}
-          ]
-        },
-        strict: true
-      });
+    test("Add a computed column with a name that already exists", /*3,*/ () {
+      var ds = new Dataset(data: {
+        'columns': [
+          {'name': "one", 'data': []},
+          {'name': "two", 'data': []}
+        ]
+      }, strict: true);
 
-      ds.fetch().then(() {
-        ok(_.isEqual(ds.columnNames(), ["one", "two"]));
+      ds.fetch().then((_) {
+        expect(ds.columnNames(), equals(["one", "two"]));
 
-        raises(() {
+        expect(() {
           ds.addComputedColumn("one", "number", (row) {
-            return row.one + row.two;
+            return row['one'] + row['two'];
           });
-        }, "There is already a column by this name.");
+        }, throws, reason: "There is already a column by this name.");
 
-        ok(_.isEqual(ds.columnNames(), ["one", "two"]));
+        expect(ds.columnNames(), equals(["one", "two"]));
       });
     });
 
-    test("Add computed column to dataset with values", 3, () {
-      var ds = new Miso.Dataset({
-        data: {
-          columns: [
-            {
-              name: "one",
-              data: [1, 2, 3]
-            },
-            {
-              name: "two",
-              data: [10, 20, 30]
-            }
-          ]
-        },
-        strict: true
-      });
+    test("Add computed column to dataset with values", /*3,*/ () {
+      var ds = new Dataset(data: {
+        'columns': [
+          {
+            'name': "one",
+            'data': [1, 2, 3]
+          },
+          {
+            'name': "two",
+            'data': [10, 20, 30]
+          }
+        ]
+      }, strict: true);
 
-      ds.fetch().then(() {
-        ok(_.isEqual(ds.columnNames(), ["one", "two"]));
+      ds.fetch().then((_) {
+        expect(ds.columnNames(), equals(["one", "two"]));
 
         var newcol = ds.addComputedColumn("three", "number", (row) {
-          return row.one + row.two;
+          return row['one'] + row['two'];
         });
 
-        ok(_.isEqual(ds.columnNames(), ["one", "two", "three"]));
-        ok(_.isEqual(newcol.data, [11, 22, 33]));
+        expect(ds.columnNames(), equals(["one", "two", "three"]));
+        expect(newcol.data, equals([11, 22, 33]));
       });
     });
 
-    test("Add row to a dataset with one computed column", 5, () {
-      var ds = new Miso.Dataset({
-        data: {
-          columns: [
-            {
-              name: "one",
-              data: [1, 2, 3]
-            },
-            {
-              name: "two",
-              data: [10, 20, 30]
-            }
-          ]
-        },
-        strict: true
-      });
+    test("Add row to a dataset with one computed column", /*5,*/ () {
+      var ds = new Dataset(data: {
+        'columns': [
+          {
+            'name': "one",
+            'data': [1, 2, 3]
+          },
+          {
+            'name': "two",
+            'data': [10, 20, 30]
+          }
+        ]
+      }, strict: true);
 
-      ds.fetch().then(() {
-        ok(_.isEqual(ds.columnNames(), ["one", "two"]));
+      ds.fetch().then((_) {
+        expect(ds.columnNames(), equals(["one", "two"]));
 
         var newcol = ds.addComputedColumn("three", "number", (row) {
-          return row.one + row.two;
+          return row['one'] + row['two'];
         });
 
-        ok(_.isEqual(ds.columnNames(), ["one", "two", "three"]));
-        ok(_.isEqual(newcol.data, [11, 22, 33]));
+        expect(ds.columnNames(), equals(["one", "two", "three"]));
+        expect(newcol.data, equals([11, 22, 33]));
 
         // add a row
-        ds.add({one: 4, two: 40});
+        ds.add({'one': 4, 'two': 40});
 
-        equals(newcol.data.length, 4);
-        ok(_.isEqual(newcol.data, [11, 22, 33, 44]), newcol.data);
+        expect(newcol.data.length, equals(4));
+        expect(newcol.data, equals([11, 22, 33, 44]), reason: "${newcol.data}");
       });
     });
 
     test(
         "Add a row to a dataset with multiple computed columns one of which depends on a computed column",
-        8, () {
-      var ds = new Miso.Dataset({
-        data: {
-          columns: [
-            {
-              name: "one",
-              data: [1, 2, 3]
-            },
-            {
-              name: "two",
-              data: [10, 20, 30]
-            }
-          ]
-        },
-        strict: true
-      });
+        /*8,*/ () {
+      var ds = new Dataset(data: {
+        'columns': [
+          {
+            'name': "one",
+            'data': [1, 2, 3]
+          },
+          {
+            'name': "two",
+            'data': [10, 20, 30]
+          }
+        ]
+      }, strict: true);
 
-      ds.fetch().then(() {
-        ok(_.isEqual(ds.columnNames(), ["one", "two"]));
+      ds.fetch().then((_) {
+        expect(ds.columnNames(), equals(["one", "two"]));
 
         var newcol = ds.addComputedColumn("three", "number", (row) {
-          return row.one + row.two;
+          return row['one'] + row['two'];
         });
         var newcol2 = ds.addComputedColumn("four", "number", (row) {
-          return row.one + row.two + row.three;
+          return row['one'] + row['two'] + row['three'];
         });
 
-        ok(_.isEqual(ds.columnNames(), ["one", "two", "three", "four"]));
-        ok(_.isEqual(newcol.data, [11, 22, 33]));
-        ok(_.isEqual(newcol2.data, [22, 44, 66]), newcol2.data);
+        expect(ds.columnNames(), equals(["one", "two", "three", "four"]));
+        expect(newcol.data, equals([11, 22, 33]));
+        expect(newcol2.data, equals([22, 44, 66]), reason: "${newcol2.data}");
 
         // add a row
-        ds.add({one: 4, two: 40});
+        ds.add({'one': 4, 'two': 40});
 
-        equals(newcol.data.length, 4);
-        equals(newcol2.data.length, 4);
-        ok(_.isEqual(newcol.data, [11, 22, 33, 44]), newcol.data);
-        ok(_.isEqual(newcol2.data, [22, 44, 66, 88]), newcol2.data);
+        expect(newcol.data.length, equals(4));
+        expect(newcol2.data.length, equals(4));
+        expect(newcol.data, equals([11, 22, 33, 44]), reason: "${newcol.data}");
+        expect(newcol2.data, equals([22, 44, 66, 88]),
+            reason: "${newcol2.data}");
       });
     });
 
-    test("Can't add a row with a computed column value.", 9, () {
-      var ds = new Miso.Dataset({
-        data: {
-          columns: [
-            {
-              name: "one",
-              data: [1, 2, 3]
-            },
-            {
-              name: "two",
-              data: [10, 20, 30]
-            }
-          ]
-        },
-        strict: true
-      });
+    test("Can't add a row with a computed column value.", /*9,*/ () {
+      var ds = new Dataset(data: {
+        'columns': [
+          {
+            'name': "one",
+            'data': [1, 2, 3]
+          },
+          {
+            'name': "two",
+            'data': [10, 20, 30]
+          }
+        ]
+      }, strict: true);
 
-      ds.fetch().then(() {
-        ok(_.isEqual(ds.columnNames(), ["one", "two"]));
+      ds.fetch().then((_) {
+        expect(ds.columnNames(), equals(["one", "two"]));
 
         var newcol = ds.addComputedColumn("three", "number", (row) {
-          return row.one + row.two;
+          return row['one'] + row['two'];
         });
         var newcol2 = ds.addComputedColumn("four", "number", (row) {
-          return row.one + row.two + row.three;
+          return row['one'] + row['two'] + row['three'];
         });
 
-        ok(_.isEqual(ds.columnNames(), ["one", "two", "three", "four"]));
-        ok(_.isEqual(newcol.data, [11, 22, 33]));
-        ok(_.isEqual(newcol2.data, [22, 44, 66]), newcol2.data);
+        expect(ds.columnNames(), equals(["one", "two", "three", "four"]));
+        expect(newcol.data, equals([11, 22, 33]));
+        expect(newcol2.data, equals([22, 44, 66]), reason: "${newcol2.data}");
 
         // add a row
-        raises(() {
-          ds.add({one: 4, two: 40, three: 34});
-        });
+        expect(() {
+          ds.add({'one': 4, 'two': 40, 'three': 34});
+        }, throws);
 
-        equals(newcol.data.length, 3);
-        equals(newcol2.data.length, 3);
-        ok(_.isEqual(newcol.data, [11, 22, 33]), newcol.data);
-        ok(_.isEqual(newcol2.data, [22, 44, 66]), newcol2.data);
+        expect(newcol.data.length, equals(3));
+        expect(newcol2.data.length, equals(3));
+        expect(newcol.data, equals([11, 22, 33]), reason: "${newcol.data}");
+        expect(newcol2.data, equals([22, 44, 66]), reason: "${newcol2.data}");
       });
     });
 
-    test("Update a row in a dataset with a single computed column", 3, () {
-      var ds = new Miso.Dataset({
-        data: {
-          columns: [
-            {
-              name: "one",
-              data: [1, 2, 3]
-            },
-            {
-              name: "two",
-              data: [10, 20, 30]
-            }
-          ]
-        },
-        strict: true
-      });
+    test("Update a row in a dataset with a single computed column", /*3,*/ () {
+      var ds = new Dataset(data: {
+        'columns': [
+          {
+            'name': "one",
+            'data': [1, 2, 3]
+          },
+          {
+            'name': "two",
+            'data': [10, 20, 30]
+          }
+        ]
+      }, strict: true);
 
-      ds.fetch().then(() {
-        ok(_.isEqual(ds.columnNames(), ["one", "two"]));
+      ds.fetch().then((_) {
+        expect(ds.columnNames(), equals(["one", "two"]));
 
         var newcol = ds.addComputedColumn("three", "number", (row) {
-          return row.one + row.two;
+          return row['one'] + row['two'];
         });
         var newcol2 = ds.addComputedColumn("four", "number", (row) {
-          return row.one + row.two + row.three;
+          return row['one'] + row['two'] + row['three'];
         });
 
         var firstId = ds.rowByPosition(0)._id;
 
-        ds.update({_id: firstId, one: 100});
+        ds.update({'_id': firstId, 'one': 100});
 
-        ok(_.isEqual(newcol.data, [110, 22, 33]), newcol.data);
-        ok(_.isEqual(newcol2.data, [220, 44, 66]), newcol2.data);
+        expect(newcol.data, equals([110, 22, 33]), reason: "${newcol.data}");
+        expect(newcol2.data, equals([220, 44, 66]), reason: "${newcol2.data}");
       });
     });
 
-    test("remove row and make sure computed column row is removed too", 2, () {
-      var ds = new Miso.Dataset({
-        data: {
-          columns: [
-            {
-              name: "one",
-              data: [1, 2, 3]
-            },
-            {
-              name: "two",
-              data: [10, 20, 30]
-            }
-          ]
-        },
-        strict: true
-      });
+    test(
+        "remove row and make sure computed column row is removed too", /*2,*/ () {
+      var ds = new Dataset(data: {
+        'columns': [
+          {
+            'name': "one",
+            'data': [1, 2, 3]
+          },
+          {
+            'name': "two",
+            'data': [10, 20, 30]
+          }
+        ]
+      }, strict: true);
 
-      ds.fetch().then(() {
-        ok(_.isEqual(ds.columnNames(), ["one", "two"]));
+      ds.fetch().then((_) {
+        expect(ds.columnNames(), equals(["one", "two"]));
 
         var newcol = ds.addComputedColumn("three", "number", (row) {
-          return row.one + row.two;
+          return row['one'] + row['two'];
         });
 
         var firstId = ds.rowByPosition(0)._id;
         ds.remove(firstId);
 
-        ok(_.isEqual(newcol.data, [22, 33]), newcol.data);
+        expect(newcol.data, equals([22, 33]), reason: "${newcol.data}");
       });
     });
 
     test(
         "check that syncable datasets notify properly of computed columns too during addition",
-        2, () {
-      var ds = new Miso.Dataset({
-        data: {
-          columns: [
-            {
-              name: "one",
-              data: [1, 2, 3]
-            },
-            {
-              name: "two",
-              data: [10, 20, 30]
-            }
-          ]
-        },
-        strict: true,
-        sync: true
-      });
+        /*2,*/ () {
+      var ds = new Dataset(data: {
+        'columns': [
+          {
+            'name': "one",
+            'data': [1, 2, 3]
+          },
+          {
+            'name': "two",
+            'data': [10, 20, 30]
+          }
+        ]
+      }, strict: true, sync: true);
 
-      ds.fetch().then(() {
-        ok(_.isEqual(ds.columnNames(), ["one", "two"]));
+      ds.fetch().then((_) {
+        expect(ds.columnNames(), equals(["one", "two"]));
 
         ds.addComputedColumn("three", "number", (row) {
-          return row.one + row.two;
+          return row['one'] + row['two'];
         });
 
         stop();
         ds.subscribe("add", (event) {
-          ok(event.deltas[0].changed.three == 44);
+          expect(event.deltas[0].changed.three, equals(44));
           start();
         });
 
-        ds.add({one: 4, two: 40});
+        ds.add({'one': 4, 'two': 40});
       });
     });
 
     test(
         "check that syncable datasets notify properly of computed columns too during addition",
-        2, () {
-      var ds = new Miso.Dataset({
-        data: {
-          columns: [
-            {
-              name: "one",
-              data: [1, 2, 3]
-            },
-            {
-              name: "two",
-              data: [10, 20, 30]
-            }
-          ]
-        },
-        strict: true,
-        sync: true
-      });
+        /*2,*/ () {
+      var ds = new Dataset(data: {
+        'columns': [
+          {
+            'name': "one",
+            'data': [1, 2, 3]
+          },
+          {
+            'name': "two",
+            'data': [10, 20, 30]
+          }
+        ]
+      }, strict: true, sync: true);
 
-      ds.fetch().then(() {
-        ok(_.isEqual(ds.columnNames(), ["one", "two"]));
+      ds.fetch().then((_) {
+        expect(ds.columnNames(), equals(["one", "two"]));
 
         ds.addComputedColumn("three", "number", (row) {
-          return row.one + row.two;
+          return row['one'] + row['two'];
         });
 
         stop();
         ds.subscribe("change", (event) {
-          ok(event.deltas[0].changed.three == 110);
+          expect(event.deltas[0].changed.three, equals(110));
           start();
         });
 
-        ds.update({_id: ds.rowByPosition(0)._id, one: 100});
+        ds.update({'_id': ds.rowByPosition(0)._id, 'one': 100});
       });
     });
   });
 
   test("custom idAttribute", () {
-    var ds = new Miso.Dataset({
-      data: {
-        columns: [
-          {
-            name: "one",
-            data: [1, 2, 3]
-          },
-          {
-            name: "two",
-            data: [10, 20, 30]
-          }
-        ]
-      },
-      strict: true,
-      idAttribute: 'one'
-    });
-    ds.fetch().then(() {
-      ok(_.isEqual(ds.rowById(1), {one: 1, two: 10}));
-      ok(_.isEqual(ds.rowById(2), {one: 2, two: 20}));
-      ok(_.isEqual(ds.rowById(3), {one: 3, two: 30}));
+    var ds = new Dataset(data: {
+      'columns': [
+        {
+          'name': "one",
+          'data': [1, 2, 3]
+        },
+        {
+          'name': "two",
+          'data': [10, 20, 30]
+        }
+      ]
+    }, strict: true, idAttribute: 'one');
+
+    ds.fetch().then((_) {
+      expect(ds.rowById(1), equals({'one': 1, 'two': 10}));
+      expect(ds.rowById(2), equals({'one': 2, 'two': 20}));
+      expect(ds.rowById(3), equals({'one': 3, 'two': 30}));
     });
   });
 }

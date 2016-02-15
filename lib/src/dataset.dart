@@ -2,8 +2,9 @@ part of dataset;
 
 class ColumnDef {
   final String name;
-  final DataType type;
-  ColumnDef(this.name, this.type);
+  final /*DataType*/ String type;
+  final String format;
+  ColumnDef(this.name, this.type, [this.format]);
 }
 
 class Dataset extends DataView {
@@ -294,7 +295,7 @@ class Dataset extends DataView {
   ///
   /// Allows you to use deferred behavior to potentially chain multiple
   /// datasets.
-  Future fetch() {
+  Future<Dataset> fetch() {
 //    var dfd = this.deferred;
 
     if (importer == null) {

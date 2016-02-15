@@ -22,25 +22,21 @@ eventsTest() {
 
       result = 0;
       ds.publish('ping', 1);
-      equals(result, 1);
+      expect(result, equals(1));
     });
 
     test("unbinding event", () {
-      var ds = new Miso.Dataset({
-        data: {
-          columns: [
-            {
-              name: "one",
-              data: [1, 2]
-            }
-          ]
-        },
-        strict: true,
-        sync: true
-      }),
+      var ds = new Dataset(data: {
+        'columns': [
+          {
+            'name': "one",
+            'data': [1, 2]
+          }
+        ]
+      }, strict: true, sync: true),
           result = 0,
           increment = (by) {
-        by = (by || 1);
+        by = (by ?? 1);
         result += by;
       };
 
@@ -49,7 +45,7 @@ eventsTest() {
       ds.publish('ping');
       ds.unsubscribe('ping', increment);
       ds.publish('ping');
-      equals(result, 1);
+      expect(result, equals(1));
     });
   });
   group("Event Object", () {
