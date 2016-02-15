@@ -1,29 +1,29 @@
 import 'package:test/test.dart';
 import 'package:dataset/dataset.dart';
 import 'package:quiver/iterables.dart' show enumerate;
-import 'package:intl/intl.dart' show DateFormat;
 
 typesTest() {
   var numbers = ['123', '0.34', '.23'];
   var not_numbers = [null, double.NAN];
 
   group("Dataset Numeric Type", () {
-    /*test("Check number type", () {
+    test("Check number type", () {
       var notNumbers = ['a', {}, 'll22'];
 
-      numbers.forEach((num) {
-        expect(typeOf(num), equals("number"), reason: "Value should be number");
-        expect(types['number'].test(num), isTrue,
+      numbers.forEach((number) {
+        expect(typeOf(number), equals("number"),
+            reason: "Value should be number");
+        expect(types['number'].test(number), isTrue,
             reason: "Should return true for a number");
       });
 
       notNumbers.forEach((nn) {
         expect(typeOf(nn), isNot(equals("number")),
-            reason: "Value should not be number " + nn);
+            reason: "Value should not be number $nn");
         expect(types['number'].test(nn), isFalse,
-            reason: "Should not return true for a number " + nn);
+            reason: "Should not return true for a number $nn");
       });
-    });*/
+    });
 
     test("Check all non numeric values return null on numeric", () {
       types.values.forEach((type) {
@@ -78,7 +78,7 @@ typesTest() {
     });
   });
 
-  /*group("Dataset Boolean Type", () {
+  group("Dataset Boolean Type", () {
     var booleans = ['true', 'false', true];
 
     test("Check boolean type", () {
@@ -125,77 +125,64 @@ typesTest() {
       expect(types['string'].compare(null, "a"), equals(-1));
       expect(types['string'].compare("a", null), equals(1));
       expect(types['string'].compare(null, null), equals(0));
-//      expect(types['string'].compare(null, undefined), equals(0));
-//      expect(types['string'].compare(undefined, undefined), equals(0));
-//      expect(types['string'].compare(undefined, null), equals(0));
 
       expect(types['number'].compare(null, 1), equals(-1));
       expect(types['number'].compare(null, 0), equals(-1));
       expect(types['number'].compare(1, null), equals(1));
       expect(types['number'].compare(0, null), equals(1));
       expect(types['number'].compare(null, null), equals(0));
-//      expect(types['number'].compare(null, undefined), equals(0));
-//      expect(types['number'].compare(undefined, undefined), equals(0));
-//      expect(types['number'].compare(undefined, null), equals(0));
 
       expect(types['boolean'].compare(null, true), equals(-1));
       expect(types['boolean'].compare(true, null), equals(1));
       expect(types['boolean'].compare(null, null), equals(0));
-//      expect(types['boolean'].compare(null, undefined), equals(0));
-//      expect(types['boolean'].compare(undefined, undefined), equals(0));
-//      expect(types['boolean'].compare(undefined, null), equals(0));
 
       expect(types['time'].compare(null, new DateTime.now()), equals(-1));
       expect(types['time'].compare(new DateTime.now(), null), equals(1));
       expect(types['time'].compare(null, null), equals(0));
-//      expect(types['time'].compare(null, undefined), equals(0));
-//      expect(types['time'].compare(undefined, undefined), equals(0));
-//      expect(types['time'].compare(undefined, null), equals(0));
     });
   });
   group("Dataset Time Type", () {
     test("Check date parsing formats", () {
       var testtimes = [
-        {'input': "2011", 'format': "YYYY"},
-        {'input': "11", 'format': "YY"},
-        {'input': "2011/03", 'format': "YYYY/MM"},
-        {'input': "2011/04/3", 'format': "YYYY/MM/D"},
-        {'input': "2011/04/30", 'format': "YYYY/MM/D"},
-        {'input': "2011/04/30", 'format': "YYYY/MM/D"},
-        {'input': "20110430", 'format': "YYYYMMD"},
-        {'input': "20110430", 'format': "YYYYMMDD"},
-        {'input': "2011/4/03", 'format': "YYYY/M/DD"},
-        {'input': "2011/4/30", 'format': "YYYY/M/DD"},
-        {'input': "2011/6/2", 'format': "YYYY/M/D"},
-        {'input': "2011/6/20", 'format': "YYYY/M/D"},
-        {'input': "2011/6/20 4PM", 'format': "YYYY/M/D hA"},
-        {'input': "2011/6/20 4PM", 'format': "YYYY/M/D hhA"},
-        {'input': "2011/6/20 12PM", 'format': "YYYY/M/D hA"},
-        {'input': "12PM", 'format': "hA"},
-        {'input': "12:30 PM", 'format': "h:m A"},
-        {'input': "5:05 PM", 'format': "h:m A"},
-        {'input': "12:05 PM", 'format': "hh:mm A"},
+        {'input': "2011", 'format': "yyyy"},
+        {'input': "11", 'format': "yy"},
+        {'input': "2011/03", 'format': "yyyy/MM"},
+        //{'input': "2011/04/3", 'format': "yyyy/MM/d"},
+        //{'input': "2011/04/30", 'format': "yyyy/MM/d"},
+        //{'input': "2011/04/30", 'format': "yyyy/MM/d"},
+        //{'input': "20110430", 'format': "yyyyMMd"},
+        //{'input': "20110430", 'format': "yyyyMMdd"},
+        {'input': "2011/4/03", 'format': "yyyy/M/dd"},
+        {'input': "2011/4/30", 'format': "yyyy/M/dd"},
+        {'input': "2011/6/2", 'format': "yyyy/M/d"},
+        {'input': "2011/6/20", 'format': "yyyy/M/d"},
+        {'input': "2011/6/20 4PM", 'format': "yyyy/M/d Ha"},
+        {'input': "2011/6/20 4PM", 'format': "yyyy/M/d HHa"},
+        {'input': "2011/6/20 12PM", 'format': "yyyy/M/d Ha"},
+        {'input': "12PM", 'format': "Ha"},
+        {'input': "12:30 PM", 'format': "H:m a"},
+        {'input': "5:05 PM", 'format': "H:m a"},
+        {'input': "12:05 PM", 'format': "HH:mm a"},
         {'input': "-04:00", 'format': "Z"},
         {'input': "+04:00", 'format': "Z"},
         {'input': "-0400", 'format': "ZZ"},
         {'input': "+0400", 'format': "ZZ"},
-        {'input': "AM -04:00", 'format': "A Z"},
-        {'input': "PM +04:00", 'format': "A Z"},
-        {'input': "AM -0400", 'format': "A ZZ"},
-        {'input': "PM +0400", 'format': "A ZZ"},
-        {'input': "12:05 -04:00", 'format': "hh:mm Z"},
-        {'input': "12:05 +04:00", 'format': "hh:mm Z"},
-        {'input': "12:05 -0400", 'format': "hh:mm ZZ"},
-        {'input': "12:05 +0400", 'format': "hh:mm ZZ"},
-        {'input': "12:05:30 +0400", 'format': "hh:mm:s ZZ"},
-        {'input': "12:05:30 -0400", 'format': "hh:mm:ss ZZ"}
+        {'input': "AM -04:00", 'format': "a Z"},
+        {'input': "PM +04:00", 'format': "a Z"},
+        {'input': "AM -0400", 'format': "a ZZ"},
+        {'input': "PM +0400", 'format': "a ZZ"},
+        {'input': "12:05 -04:00", 'format': "HH:mm Z"},
+        {'input': "12:05 +04:00", 'format': "HH:mm Z"},
+        {'input': "12:05 -0400", 'format': "HH:mm ZZ"},
+        {'input': "12:05 +0400", 'format': "HH:mm ZZ"},
+        {'input': "12:05:30 +0400", 'format': "HH:mm:s ZZ"},
+        {'input': "12:05:30 -0400", 'format': "HH:mm:ss ZZ"}
       ];
       testtimes.forEach((t) {
-        expect(types['time'].test(t.input, {'format': t.format}), isTrue,
-            reason: t.input);
-        expect(types['time'].coerce(t.input, {'format': t.format}).valueOf(),
-            isTrue,
-            reason: moment(t.input, t.format).valueOf());
+        expect(types['time'].test(t['input'], t['format']), isTrue,
+            reason: "${t['input']} ${t['format']}");
+        expect(types['time'].coerce(t['input'], t['format']), isNotNull,
+            reason: "${t['input']} ${t['format']}");
       });
     });
 
@@ -234,7 +221,7 @@ typesTest() {
       expect(types['string'].numeric("99"), equals(99));
       expect(types['string'].numeric("99.3"), equals(99.3));
     });
-  });*/
+  });
 }
 
 main() => typesTest();

@@ -1,458 +1,449 @@
 import 'package:test/test.dart';
 import 'package:dataset/dataset.dart';
+import 'helpers.dart' as util;
 
 productsTest() {
-  module("Products :: Sum");
-  test("Basic Sum Product", () {
-    var ds = Util.baseSyncingSample();
+  group("Products :: Sum", () {
+    test("Basic Sum Product", () {
+      var ds = util.baseSyncingSample();
 
-    _.each(ds._columns, (column) {
-      if (column.name == '_id') {
-        return;
-      }
-      var sum = ds.sum(column.name);
-      ok(sum.val() == _.sum(column.data),
-          "sum is correct for column " + column.name);
+      ds._columns.forEach((column) {
+        if (column.name == '_id') {
+          return;
+        }
+        var sum = ds.sum(column.name);
+        expect(sum.val(), equals(_.sum(column.data)),
+            reason: "sum is correct for column " + column.name);
+      });
     });
-  });
 
-  test("Basic Sum Product with custom idAttribute", () {
-    var ds = Util.baseSyncingSampleCustomidAttribute();
+    test("Basic Sum Product with custom idAttribute", () {
+      var ds = util.baseSyncingSampleCustomidAttribute();
 
-    _.each(ds._columns, (column) {
-      var sum = ds.sum(column.name);
-      ok(sum.val() == _.sum(column.data),
-          "sum is correct for column " + column.name);
+      ds._columns.forEach((column) {
+        var sum = ds.sum(column.name);
+        expect(sum.val(), equals(_.sum(column.data)),
+            reason: "sum is correct for column " + column.name);
+      });
     });
-  });
 
-  test("Basic Sum Product Non Syncable", () {
-    var ds = Util.baseSample();
+    test("Basic Sum Product Non Syncable", () {
+      var ds = util.baseSample();
 
-    _.each(ds._columns, (column) {
-      if (column.name == '_id') {
-        return;
-      }
-      var sumNum = ds.sum(column.name);
-      ok(sumNum == _.sum(column.data),
-          "sum is correct for column " + column.name);
-      ok(_.isUndefined(sumNum.val), "there is no val method on sum product");
+      ds._columns.forEach((column) {
+        if (column.name == '_id') {
+          return;
+        }
+        var sumNum = ds.sum(column.name);
+        expect(sumNum, equals(_.sum(column.data)),
+            reason: "sum is correct for column " + column.name);
+        expect(sumNum.val, isNull,
+            reason: "there is no val method on sum product");
+      });
     });
-  });
 
-  test("Time Sum Should Fail", 2, () {
-    var ds = new Dataset({
-      data: [
+    test("Time Sum Should Fail", /*2,*/ () {
+      var ds = new Dataset(data: [
         {"one": 1, "t": "2010/01/13"},
         {"one": 5, "t": "2010/05/15"},
         {"one": 10, "t": "2010/01/23"}
-      ],
-      columns: [
-        {name: "t", type: "time", format: "YYYY/MM/DD"}
-      ],
-      sync: true
-    });
+      ], columns: [
+        {'name': "t", 'type': "time", 'format': "YYYY/MM/DD"}
+      ], sync: true);
 
-    _.when(ds.fetch()).then(() {
-      equals(ds.column("t").type, "time");
-      try {
-        ds.sum("t").val();
-      } catch (e) {
-        ok(true, "can't sum up time.");
-      }
+      ds.fetch().then((_) {
+        expect(ds.column("t").type, equals("time"));
+        try {
+          ds.sum("t").val();
+        } catch (e) {
+          expect(isTrue, reason: "can't sum up time.");
+        }
+      });
     });
   });
 
-  module("Products :: Max");
+  group("Products :: Max", () {
+    test("Basic Max Product", () {
+      var ds = util.baseSyncingSample();
 
-  test("Basic Max Product", () {
-    var ds = Util.baseSyncingSample();
+      // check each column
+      ds.eachColumn((columnName) {
+        var max = ds.max(columnName), column = ds.column(columnName);
+        expect(max.val(), equals(math.max(null, column.data)),
+            reason: "Max is correct for col " + columnName);
+      });
 
-    // check each column
-    ds.eachColumn((columnName) {
-      var max = ds.max(columnName), column = ds.column(columnName);
-      ok(max.val() == Math.max.apply(null, column.data),
-          "Max is correct for col " + columnName);
+      //empty
+      expect(ds.max().val(), equals(9));
+
+      expect(ds.max(ds.columnNames()).val(), equals(9));
     });
 
-    //empty
-    equals(ds.max().val(), 9);
+    test("Basic Max Calculation no syncable", () {
+      var ds = util.baseSample();
 
-    ok(ds.max(ds.columnNames()).val() == 9);
-  });
+      // check each column
+      ds.eachColumn((columnName) {
+        var max = ds.max(columnName);
+        var column = ds.column(columnName);
+        expect(max, equals(math.max(null, column.data)),
+            reason: "Max is correct for col " + columnName);
+      });
 
-  test("Basic Max Calculation no syncable", () {
-    var ds = Util.baseSample();
+      //empty
+      expect(ds.max(), equals(9));
 
-    // check each column
-    ds.eachColumn((columnName) {
-      var max = ds.max(columnName), column = ds.column(columnName);
-      ok(max == Math.max.apply(null, column.data),
-          "Max is correct for col " + columnName);
+      expect(ds.max(ds.columnNames()), equals(9));
     });
 
-    //empty
-    equals(ds.max(), 9);
-
-    ok(ds.max(ds.columnNames()) == 9);
-  });
-
-  test("Time Max Product", () {
-    var ds = new Dataset({
-      data: [
+    test("Time Max Product", () {
+      var ds = new Dataset(data: [
         {"one": 1, "t": "2010/01/13"},
         {"one": 5, "t": "2010/05/15"},
         {"one": 10, "t": "2010/01/23"}
-      ],
-      columns: [
-        {name: "t", type: "time", format: 'YYYY/MM/DD'}
-      ],
-      sync: true
-    }).fetch({
-      success: () {
-        equals(self.column("t").type, "time");
-        equals(
-            self.max("t").val().valueOf(), self.column("t").data[1].valueOf());
-      }
+      ], columns: [
+        {'name': "t", 'type': "time", 'format': 'YYYY/MM/DD'}
+      ], sync: true).fetch().then((d) {
+        expect(d.column("t").type, equals("time"));
+        expect(d.max("t").val().valueOf(),
+            equals(d.column("t").data[1].valueOf()));
+      });
     });
-  });
 
-  test("Time Max Product non syncable", () {
-    var ds = new Dataset({
-      data: [
+    test("Time Max Product non syncable", () {
+      var ds = new Dataset(data: [
         {"one": 1, "t": "2010/01/13"},
         {"one": 5, "t": "2010/05/15"},
         {"one": 10, "t": "2010/01/23"}
-      ],
-      columns: [
-        {name: "t", type: "time", format: 'YYYY/MM/DD'}
-      ]
-    });
-    _.when(ds.fetch()).then(() {
-      equals(ds.column("t").type, "time");
-      equals(ds.max("t").valueOf(), ds.column("t").data[1].valueOf());
+      ], columns: [
+        {'name': "t", 'type': "time", 'format': 'YYYY/MM/DD'}
+      ]);
+      ds.fetch().then((_) {
+        expect(ds.column("t").type, equals("time"));
+        expect(ds.max("t").valueOf(), equals(ds.column("t").data[1].valueOf()));
+      });
     });
   });
 
-  module("Products :: Min");
-  test("Basic Min Product", () {
-    var ds = Util.baseSyncingSample();
+  group("Products :: Min", () {
+    test("Basic Min Product", () {
+      var ds = util.baseSyncingSample();
 
-    // check each column
-    ds.eachColumn((columnName) {
-      if (columnName == '_id') {
-        return;
-      }
-      var min = ds.min(columnName);
-      var column = ds.column(columnName);
-      ok(min.val() == Math.min.apply(null, column.data), "Min is correct");
+      // check each column
+      ds.eachColumn((columnName) {
+        if (columnName == '_id') {
+          return;
+        }
+        var min = ds.min(columnName);
+        var column = ds.column(columnName);
+        expect(min.val(), equals(math.min(null, column.data)),
+            reason: "Min is correct");
+      });
+
+      //empty
+      expect(ds.min().val(), equals(1));
     });
 
-    //empty
-    equals(ds.min().val(), 1);
-  });
+    test("Basic Min Product Non Syncable", () {
+      var ds = util.baseSample();
 
-  test("Basic Min Product Non Syncable", () {
-    var ds = Util.baseSample();
+      // check each column
+      ds._columns.forEach((column) {
+        if (column.name == '_id') {
+          return;
+        }
+        var min = ds.min(column.name);
+        expect(min, equals(math.min(null, column.data)),
+            reason: "Min is correct");
+      });
 
-    // check each column
-    _.each(ds._columns, (column) {
-      if (column.name == '_id') {
-        return;
-      }
-      var min = ds.min(column.name);
-      ok(min == Math.min.apply(null, column.data), "Min is correct");
+      //empty
+      expect(ds.min(), equals(1));
+      var names = _.compact(ds._columns.map((column) {
+        if (column.name != "_id") {
+          return column.name;
+        }
+      }));
+      expect(ds.min(names), equals(1));
     });
 
-    //empty
-    equals(ds.min(), 1);
-    var names = _.compact(_.map(ds._columns, (column) {
-      if (column.name != "_id") {
-        return column.name;
-      }
-    }));
-    equals(ds.min(names), 1);
-  });
-
-  test("Time Min Product", () {
-    var ds = new Dataset({
-      data: [
+    test("Time Min Product", () {
+      var ds = new Dataset(data: [
         {"one": 1, "t": "2010/01/13"},
         {"one": 5, "t": "2010/05/15"},
         {"one": 10, "t": "2010/01/23"}
-      ],
-      columns: [
-        {name: "t", type: "time", format: 'YYYY/MM/DD'}
-      ],
-      sync: true
+      ], columns: [
+        {'name': "t", 'type': "time", 'format': 'YYYY/MM/DD'}
+      ], sync: true);
+
+      ds.fetch().then((_) {
+        window.ds = ds;
+        expect(ds.column("t").type, equals("time"));
+        expect(ds.min("t").val().valueOf(),
+            equals(ds.column("t").data[0].valueOf()));
+        expect(ds.min("t").type(), equals(ds.column("t").type));
+        expect(ds.min("t").numeric(), equals(ds.column("t").data[0].valueOf()));
+      });
     });
 
-    _.when(ds.fetch()).then(() {
-      window.ds = ds;
-      equals(ds.column("t").type, "time");
-      equals(ds.min("t").val().valueOf(), ds.column("t").data[0].valueOf());
-      equals(ds.min("t").type(), ds.column("t").type);
-      equals(ds.min("t").numeric(), ds.column("t").data[0].valueOf());
-    });
-  });
-
-  test("Time Min Product Non Syncable", 2, () {
-    var ds = new Dataset({
-      data: [
+    test("Time Min Product Non Syncable", /*2,*/ () {
+      var ds = new Dataset(data: [
         {"one": 1, "t": "2010/01/13"},
         {"one": 5, "t": "2010/05/15"},
         {"one": 10, "t": "2010/01/23"}
-      ],
-      columns: [
-        {name: "t", type: "time", format: 'YYYY/MM/DD'}
-      ]
+      ], columns: [
+        {'name': "t", 'type': "time", 'format': 'YYYY/MM/DD'}
+      ]);
+
+      ds.fetch().then((_) {
+        expect(ds.column("t").type, equals("time"));
+        expect(ds.min("t").valueOf(), equals(ds.column("t").data[0].valueOf()));
+      });
     });
 
-    _.when(ds.fetch()).then(() {
-      equals(ds.column("t").type, "time");
-      equals(ds.min("t").valueOf(), ds.column("t").data[0].valueOf());
-    });
-  });
-
-  test("Basic Mean Product", () {
-    var ds = new Dataset({
-      data: {
-        columns: [
+    test("Basic Mean Product", () {
+      var ds = new Dataset(data: {
+        'columns': [
           {
-            name: 'vals',
-            data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+            'name': 'vals',
+            'data': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
           },
           {
-            name: 'valsrandomorder',
-            data: [10, 2, 1, 5, 3, 8, 9, 6, 4, 7]
+            'name': 'valsrandomorder',
+            'data': [10, 2, 1, 5, 3, 8, 9, 6, 4, 7]
           },
           {
-            name: 'randomvals',
-            data: [19, 4, 233, 40, 10, 39, 23, 47, 5, 22]
+            'name': 'randomvals',
+            'data': [19, 4, 233, 40, 10, 39, 23, 47, 5, 22]
           }
         ]
-      },
-      strict: true,
-      sync: true
+      }, strict: true, sync: true);
+
+      ds.fetch().then((_) {
+        var m = ds.mean('vals');
+        var m2 = ds.mean('valsrandomorder');
+        var m3 = ds.mean(['vals', 'valsrandomorder']);
+
+        expect(m.val(), equals(5.5));
+        expect(m2.val(), equals(5.5));
+        expect(m3.val(), equals(5.5));
+        expect(ds.mean(['vals', 'valsrandomorder', 'randomvals']).val(),
+            equals(18.4));
+
+        m.subscribe("change", (s) {
+          expect(s.deltas[0].old, equals(5.5));
+          expect(self.val(), equals(6.4));
+        });
+
+        m2.subscribe("change", (s) {
+          expect(s.deltas[0].old, equals(5.5));
+          expect(self.val(), equals(6.4));
+        });
+
+        m3.subscribe("change", (s) {
+          expect(s.deltas[0].old, equals(5.5));
+          expect(self.val(), equals(5.95));
+        });
+
+        ds.update(ds._rowIdByPosition[0], {'vals': 10, 'valsrandomorder': 10});
+      });
     });
 
-    _.when(ds.fetch()).then(() {
-      var m = ds.mean('vals');
-      var m2 = ds.mean('valsrandomorder');
-      var m3 = ds.mean(['vals', 'valsrandomorder']);
-
-      equals(m.val(), 5.5);
-      equals(m2.val(), 5.5);
-      equals(m3.val(), 5.5);
-      equals(ds.mean(['vals', 'valsrandomorder', 'randomvals']).val(), 18.4);
-
-      m.subscribe("change", (s) {
-        equals(s.deltas[0].old, 5.5);
-        equals(self.val(), 6.4);
-      });
-
-      m2.subscribe("change", (s) {
-        equals(s.deltas[0].old, 5.5);
-        equals(self.val(), 6.4);
-      });
-
-      m3.subscribe("change", (s) {
-        equals(s.deltas[0].old, 5.5);
-        equals(self.val(), 5.95);
-      });
-
-      ds.update(ds._rowIdByPosition[0], {vals: 10, valsrandomorder: 10});
-    });
-  });
-
-  test("Basic Mean Product Non Syncable", () {
-    var ds = new Dataset({
-      data: {
-        columns: [
+    test("Basic Mean Product Non Syncable", () {
+      var ds = new Dataset(data: {
+        'columns': [
           {
-            name: 'vals',
-            data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+            'name': 'vals',
+            'data': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
           },
           {
-            name: 'valsrandomorder',
-            data: [10, 2, 1, 5, 3, 8, 9, 6, 4, 7]
+            'name': 'valsrandomorder',
+            'data': [10, 2, 1, 5, 3, 8, 9, 6, 4, 7]
           },
           {
-            name: 'randomvals',
-            data: [19, 4, 233, 40, 10, 39, 23, 47, 5, 22]
+            'name': 'randomvals',
+            'data': [19, 4, 233, 40, 10, 39, 23, 47, 5, 22]
           }
         ]
-      },
-      strict: true
+      }, strict: true);
+
+      ds.fetch().then((_) {
+        var m = ds.mean('vals');
+        var m2 = ds.mean('valsrandomorder');
+        var m3 = ds.mean(['vals', 'valsrandomorder']);
+        var m4 = ds.mean(['vals', 'valsrandomorder', 'randomvals']);
+
+        expect(m, equals(5.5));
+        expect(m2, equals(5.5));
+        expect(m3, equals(5.5));
+        expect(m4, equals(18.4));
+
+        ds.update(ds._rowIdByPosition[0], {'vals': 10, 'valsrandomorder': 10});
+
+        expect(m, equals(5.5));
+        expect(m2, equals(5.5));
+        expect(m3, equals(5.5));
+        expect(m4, equals(18.4));
+      });
     });
 
-    _.when(ds.fetch()).then(() {
-      var m = ds.mean('vals');
-      var m2 = ds.mean('valsrandomorder');
-      var m3 = ds.mean(['vals', 'valsrandomorder']);
-      var m4 = ds.mean(['vals', 'valsrandomorder', 'randomvals']);
-
-      equals(m, 5.5);
-      equals(m2, 5.5);
-      equals(m3, 5.5);
-      equals(m4, 18.4);
-
-      ds.update(ds._rowIdByPosition[0], {vals: 10, valsrandomorder: 10});
-
-      equals(m, 5.5);
-      equals(m2, 5.5);
-      equals(m3, 5.5);
-      equals(m4, 18.4);
-    });
-  });
-
-  test("Basic Time Mean Product", () {
-    var ds = new Dataset({
-      data: [
+    test("Basic Time Mean Product", () {
+      var ds = new Dataset(data: [
         {"one": 1, "t": "2010/01/01"},
         {"one": 5, "t": "2010/01/15"},
         {"one": 10, "t": "2010/01/30"}
-      ],
-      columns: [
-        {name: "t", type: "time", format: 'YYYY/MM/DD'}
-      ],
-      sync: true
-    });
+      ], columns: [
+        {'name': "t", 'type': "time", 'format': 'YYYY/MM/DD'}
+      ], sync: true);
 
-    _.when(ds.fetch()).then(() {
-      var meantime = ds.mean("t");
-      equals(meantime.val().format("YYYYMMDD"),
-          moment("2010/01/15").format("YYYYMMDD"));
+      ds.fetch().then((_) {
+        var meantime = ds.mean("t");
+        expect(meantime.val().format("YYYYMMDD"),
+            equals(moment("2010/01/15").format("YYYYMMDD")));
 
-      meantime.subscribe("change", () {
-        equals(meantime.val().format("YYYYMMDD"),
-            moment("2010/01/10").format("YYYYMMDD"));
+        meantime.subscribe("change", () {
+          expect(meantime.val().format("YYYYMMDD"),
+              equals(moment("2010/01/10").format("YYYYMMDD")));
+        });
+
+        ds.update({'_id': ds._rowIdByPosition[2], 't': "2010/01/20"},
+            silent: true);
+        ds.update({'_id': ds._rowIdByPosition[1], 't': "2010/01/10"});
       });
-
-      ds.update({_id: ds._rowIdByPosition[2], t: "2010/01/20"}, {silent: true});
-      ds.update({_id: ds._rowIdByPosition[1], t: "2010/01/10"});
     });
   });
 
   // TODO: add time mean product here!!!g
 
-  module("Products :: Sync");
+  group("Products :: Sync", () {
+    test("Basic Sync Recomputation", () {
+      var ds = util.baseSyncingSample();
+      var max = ds.max("one");
 
-  test("Basic Sync Recomputation", () {
-    var ds = Util.baseSyncingSample();
-    var max = ds.max("one");
+      expect(max.val(), equals(3), reason: "old max correct");
 
-    ok(max.val() == 3, "old max correct");
+      ds.update({'_id': ds._rowIdByPosition[0], 'one': 22});
 
-    ds.update({_id: ds._rowIdByPosition[0], one: 22});
-
-    ok(max.val() == 22, "max was updated");
-  });
-
-  test("Basic Sync No Recomputation Non Syncing", () {
-    var ds = Util.baseSample();
-    var max = ds.max("one");
-
-    ok(max == 3, "old max correct");
-
-    ds.update(ds._rowIdByPosition[0], {one: 22});
-
-    ok(max == 3, "max was not updated");
-  });
-
-  test("Basic subscription to product changes", () {
-    var ds = Util.baseSyncingSample(), max = ds.max("one"), counter = 0;
-
-    max.subscribe('change', () {
-      counter += 1;
+      expect(max.val(), equals(22), reason: "max was updated");
     });
 
-    ds.update({_id: ds._rowIdByPosition[0], one: 22});
-    ds.update({_id: ds._rowIdByPosition[0], one: 34});
+    test("Basic Sync No Recomputation Non Syncing", () {
+      var ds = util.baseSample();
+      var max = ds.max("one");
 
-    equals(counter, 2);
-  });
+      expect(max, equals(3), reason: "old max correct");
 
-  test("Basic subscription to product changes on syncable doesn't trigger", () {
-    var ds = Util.baseSample(), max = ds.max("one");
+      ds.update(ds._rowIdByPosition[0], {'one': 22});
 
-    equals(_.isUndefined(max.subscribe), true);
-    equals(Dataset.typeOf(max), "number");
-  });
-
-  test("Subscription doesn't trigger when value doesn't change", () {
-    var ds = Util.baseSyncingSample(), max = ds.max("one"), counter = 0;
-
-    max.subscribe('change', () {
-      counter += 1;
+      expect(max, equals(3), reason: "max was not updated");
     });
 
-    ds.update({_id: ds._rowIdByPosition[0], one: 22});
-    ds.update({_id: ds._rowIdByPosition[1], one: 2});
+    test("Basic subscription to product changes", () {
+      var ds = util.baseSyncingSample();
+      var max = ds.max("one");
+      var counter = 0;
 
-    equals(counter, 1);
-  });
-
-  module("Products :: Custom");
-
-  test("Defining a custom product", () {
-    var ds = Util.baseSyncingSample();
-    var min = Dataset.Product.define(() {
-      var min = Infinity;
-      _.each(self._column('one').data, (value) {
-        if (value < min) {
-          min = value;
-        }
+      max.subscribe('change', () {
+        counter += 1;
       });
-      return min;
-    }).apply(ds);
 
-    equals(min.val(), 1, "custum product calcualted the minimum");
+      ds.update({'_id': ds._rowIdByPosition[0], 'one': 22});
+      ds.update({'_id': ds._rowIdByPosition[0], 'one': 34});
 
-    ds.update({_id: ds._rowIdByPosition[0], one: 22});
-
-    equals(min.val(), 2, "custom product calculated the updated minimum");
-  });
-
-  test("Defining a new product on the Miso prototype", () {
-    var ds = Util.baseSyncingSample();
-    Dataset.prototype.custom = Dataset.Product.define(() {
-      var min = Infinity;
-      _.each(self._column('one').data, (value) {
-        if (value < min) {
-          min = value;
-        }
-      });
-      return min;
+      expect(counter, equals(2));
     });
 
-    var custom = ds.custom();
+    test("Basic subscription to product changes on syncable doesn't trigger",
+        () {
+      var ds = util.baseSample();
+      var max = ds.max("one");
 
-    equals(custom.val(), 1, "custum product calculated the minimum");
-
-    ds.update({_id: ds._rowIdByPosition[0], one: 22});
-
-    equals(custom.val(), 2, "custum product calculated the updated minimum");
-  });
-
-  test("Defining a new product a dataset", () {
-    var ds = Util.baseSyncingSample();
-    ds.custom = Dataset.Product.define(() {
-      var min = Infinity;
-      _.each(self._column('one').data, (value) {
-        if (value < min) {
-          min = value;
-        }
-      });
-      return min;
+      expect(max.subscribe, isNull);
+      expect(typeOf(max), equals("number"));
     });
 
-    var custom = ds.custom();
+    test("Subscription doesn't trigger when value doesn't change", () {
+      var ds = util.baseSyncingSample();
+      var max = ds.max("one");
+      var counter = 0;
 
-    equals(custom.val(), 1, "custum product calcualted the minimum");
+      max.subscribe('change', () {
+        counter += 1;
+      });
 
-    ds.update({_id: ds._rowIdByPosition[0], one: 22});
+      ds.update({'_id': ds._rowIdByPosition[0], 'one': 22});
+      ds.update({'_id': ds._rowIdByPosition[1], 'one': 2});
 
-    equals(custom.val(), 2, "custum product calculated the updated minimum");
+      equals(counter, 1);
+    });
+  });
+
+  group("Products :: Custom", () {
+    test("Defining a custom product", () {
+      var ds = util.baseSyncingSample();
+      var min = new Product.define((d) {
+        var min = double.INFINITY;
+        d._column('one').data((value) {
+          if (value < min) {
+            min = value;
+          }
+        });
+        return min;
+      }).apply(ds);
+
+      expect(min.val(), equals(1),
+          reason: "custum product calcualted the minimum");
+
+      ds.update({'_id': ds._rowIdByPosition[0], 'one': 22});
+
+      expect(min.val(), equals(2),
+          reason: "custom product calculated the updated minimum");
+    });
+
+    test("Defining a new product on the Miso prototype", () {
+      var ds = util.baseSyncingSample();
+      Dataset.prototype.custom = new Product.define((d) {
+        var min = double.INFINITY;
+        d._column('one').data.forEach((value) {
+          if (value < min) {
+            min = value;
+          }
+        });
+        return min;
+      });
+
+      var custom = ds.custom();
+
+      expect(custom.val(), equals(1),
+          reason: "custum product calculated the minimum");
+
+      ds.update({'_id': ds._rowIdByPosition[0], 'one': 22});
+
+      expect(custom.val(), equals(2),
+          reason: "custum product calculated the updated minimum");
+    });
+
+    test("Defining a new product a dataset", () {
+      var ds = util.baseSyncingSample();
+      ds.custom = new Product.define((d) {
+        var min = double.INFINITY;
+        d._column('one').data.forEach((value) {
+          if (value < min) {
+            min = value;
+          }
+        });
+        return min;
+      });
+
+      var custom = ds.custom();
+
+      expect(custom.val(), equals(1),
+          reason: "custum product calcualted the minimum");
+
+      ds.update({'_id': ds._rowIdByPosition[0], 'one': 22});
+
+      expect(custom.val(), equals(2),
+          reason: "custum product calculated the updated minimum");
+    });
   });
 }

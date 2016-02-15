@@ -47,7 +47,7 @@ abstract class DataType<T> {
 
   /// Convert an incoming value into this specific type.
   /// should return the value as would be represented by this type.
-  T coerce(value);
+  T coerce(value, [options]);
 }
 
 final Map<String, DataType> types = {
@@ -62,7 +62,7 @@ class MixedType<M extends Comparable> implements DataType<M> {
   final String name = 'mixed';
 
   /// Coerces the value, given the is the mixed type it's a passthrough.
-  dynamic coerce(M v) {
+  dynamic coerce(M v, [_]) {
     if (v == null || (v is num && (v as num).isNaN)) {
       return null;
     }
@@ -110,7 +110,7 @@ class StringType implements DataType<String> {
   final String name = "string";
 
   /// Coerces the value to a string.
-  String coerce(v) {
+  String coerce(v, [_]) {
     if (v == null || (v is num && v.isNaN)) {
       return null;
     }
@@ -139,7 +139,7 @@ class StringType implements DataType<String> {
     }
     num n;
     try {
-      num.parse(value);
+      n = num.parse(value);
     } on FormatException catch (_) {
       return null;
     }
@@ -154,19 +154,22 @@ class BooleanType implements DataType<bool> {
   final RegExp regexp = new RegExp(r"^(true|false)$");
 
   /// Coerces the value to a boolean, uses javascript truthy/falsy.
-  bool coerce(v) {
+  bool coerce(v, [_]) {
     if (v == null || (v is num && v.isNaN)) {
       return null;
     } else if (v is num) {
       return v != 0;
     } else if (v is String) {
       return (v == 'false') ? false : v.length != 0;
+    } else if (v is bool) {
+      return v;
     }
     return false;
   }
 
   /// Tests whether the value is a boolean.
-  bool test(v, [_]) => v == null || v is bool || regexp.hasMatch(v);
+  bool test(v, [_]) =>
+      v == null || v is bool || (v is String && regexp.hasMatch(v));
 
   /// Compares two boolean type values
   int compare(bool n1, bool n2) {
@@ -203,7 +206,7 @@ class NumberType implements DataType<num> {
   final RegExp regexp = new RegExp(r"^\s*[\-\.]?[0-9]+([\.][0-9]+)?\s*$");
 
   /// Coerces the value to a number, a passthrough.
-  num coerce(v) {
+  num coerce(v, [_]) {
     if (v == null || (v is num && v.isNaN)) {
       return null;
     } else if (v is num) {
@@ -223,7 +226,8 @@ class NumberType implements DataType<num> {
   }
 
   /// Tests whether the value is a number.
-  bool test(v, [_]) => v == null || v is num || regexp.hasMatch(v);
+  bool test(v, [_]) =>
+      v == null || v is num || (v is String && regexp.hasMatch(v));
 
   /// Compares two `number` type values
   compare(num n1, num n2) {
@@ -255,37 +259,37 @@ class NumberType implements DataType<num> {
 class TimeType implements DataType<DateTime> {
   final String name = "time";
 
-  String format = "DD/MM/YYYY";
+  String format = "dd/MM/yyyy";
 
-  List _formatLookup = [
-    ['DD', r"\\d{2}"],
-    ['D', r"\\d{1}|\\d{2}"],
-    ['MM', r"\\d{2}"],
-    ['M', r"\\d{1}|\\d{2}"],
-    ['YYYY', r"\\d{4}"],
-    ['YY', r"\\d{2}"],
-    ['A', r"[AM|PM]"],
-    ['hh', r"\\d{2}"],
-    ['h', r"\\d{1}|\\d{2}"],
-    ['mm', r"\\d{2}"],
-    ['m', r"\\d{1}|\\d{2}"],
-    ['ss', r"\\d{2}"],
-    ['s', r"\\d{1}|\\d{2}"],
-    ['ZZ', r"[-|+]\\d{4}"],
-    ['Z', r"[-|+]\\d{2}:\\d{2}"]
+  static final List<List<String>> _formatLookup = [
+    ['dd', r"\d{2}"],
+    //['d', r"\d{1}|\d{2}"],
+    ['MM', r"\d{2}"],
+    ['M', r"\d{1}|\d{2}"],
+    ['yyyy', r"\d{4}"],
+    ['yy', r"\d{2}"],
+    ['a', r"[AM|PM]"],
+    ['HH', r"\d{2}"],
+    ['H', r"\d{1}|\d{2}"],
+    ['mm', r"\d{2}"],
+    ['m', r"\d{1}|\d{2}"],
+    ['ss', r"\d{2}"],
+    ['s', r"\d{1}|\d{2}"],
+    ['ZZ', r"[-|+]\d{4}"],
+    ['Z', r"[-|+]\d{2}:\d{2}"]
   ];
   final Map _regexpTable = {};
 
-  RegExp _regexp(format) {
+  RegExp _regexp(String format) {
     //memoise
     if (_regexpTable.containsKey(format)) {
       return new RegExp(_regexpTable[format]);
     }
 
     //build the regexp for substitutions
-    var regexp = format;
+    String regexp = format;
     _formatLookup.forEach((pair) {
-      regexp = regexp.replace(pair[0], pair[1]);
+      regexp = regexp.replaceAll(pair[0], pair[1]);
     });
 
     // escape all forward slashes
@@ -293,7 +297,7 @@ class TimeType implements DataType<DateTime> {
 
     // save the string of the regexp, NOT the regexp itself.
     // For some reason, this resulted in inconsistant behavior
-    this._regexpTable[format] = regexp;
+    _regexpTable[format] = regexp;
     return new RegExp(_regexpTable[format]);
   }
 
@@ -309,9 +313,10 @@ class TimeType implements DataType<DateTime> {
       return df.parse(v);
     } else if (v is num) {
       return new DateTime.fromMillisecondsSinceEpoch(v.toInt());
-    } else {
+    } else if (v is DateTime) {
       return v;
     }
+    return null;
   }
 
   /// Tests whether the value is a time.
@@ -320,7 +325,7 @@ class TimeType implements DataType<DateTime> {
       return true;
     }
     if (v is String) {
-      var regex = this._regexp(fmt ?? this.format);
+      var regex = _regexp(fmt ?? this.format);
       return regex.hasMatch(v);
     } else {
       //any number or moment obj basically
