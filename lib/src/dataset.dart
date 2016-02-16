@@ -31,6 +31,11 @@ int _idCounter = 0;
 
 num uniqueId() => _idCounter++;
 
+Iterable<dynamic> _flatten(Iterable<dynamic> iter) =>
+    iter.expand((a) => a is Iterable ? _flatten(a) : [a]);
+
+_mean(Iterable data) => data.reduce((a, b) => a + b) / data.length;
+
 class ColumnDef {
   final String name;
   final /*DataType*/ String type;
@@ -594,7 +599,7 @@ class Dataset extends DataView {
         }
 
         //Ensure value passes the type test
-        if (!type.test(value, column)) {
+        if (!type.test(value, column.format)) {
           throw "Value is incorrect type";
         }
 
@@ -603,7 +608,7 @@ class Dataset extends DataView {
           return;
         }
 
-        value = type.coerce(value, column);
+        value = type.coerce(value, column.format);
 
         //Run any before filters on the column
         if (column.before != null) {
@@ -637,11 +642,11 @@ class Dataset extends DataView {
     return deltas;
   }
 
-  _functionUpdate(bool func(row)) {
+  _functionUpdate(Map func(Map row)) {
     var rows = [];
     for (var i = 0; i < length; i++) {
       var newRow = func(rowByPosition(i));
-      if (newRow != false) {
+      if (newRow != null) {
         rows.add(newRow);
       }
     }
@@ -659,15 +664,21 @@ class Dataset extends DataView {
   /// [rowsOrFunction] can be one of two things: A row id, or a filter
   /// function that takes a row and returns true if that row should be
   /// removed or false otherwise.
-  void update(rowsOrFunction, [bool silent = false]) {
-    var deltas;
+  void update(Map rows, [bool silent = false]) {
+//    var rows = (rowsOrFunction is List) ? rowsOrFunction : [rowsOrFunction];
+    var deltas = _arrayUpdate([rows]);
 
-    if (rowsOrFunction is Function) {
-      deltas = _functionUpdate(rowsOrFunction);
-    } else {
-      var rows = (rowsOrFunction is List) ? rowsOrFunction : [rowsOrFunction];
-      deltas = _arrayUpdate(rows);
+    //computer column updates
+    //update triggers
+    if (syncable && !silent) {
+      var ev = new DatasetEvent(deltas, this);
+      _updateCtrl.add(ev);
+      _changeCtrl.add(ev);
     }
+  }
+
+  void updateWhere(Map rows(Map row), [bool silent = false]) {
+    var deltas = _functionUpdate(rows);
 
     //computer column updates
     //update triggers

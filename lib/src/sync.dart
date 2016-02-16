@@ -1,8 +1,8 @@
 part of dataset;
 
 class Delta {
-  final Map old;
-  final changed;
+  final /*Map*/ old;
+  final /*Map*/ changed;
   final id;
   Delta._({this.old, this.changed, this.id});
 
@@ -31,6 +31,8 @@ class Delta {
       return false;
     }
   }
+
+  toString() => "old: $old changed: $changed";
 }
 
 class DatasetEvent {
@@ -57,4 +59,6 @@ class DatasetEvent {
 
     return cols;
   }
+
+  toString() => "DatasetEvent $deltas";
 }

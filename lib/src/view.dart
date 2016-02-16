@@ -705,7 +705,7 @@ class DataView {
           vals.add(col.data);
         });
 
-        vals = _.flatten(vals);
+        vals = _flatten(vals);
 
         // save types and type options to later coerce
         var type = columns[0].type;
@@ -714,6 +714,6 @@ class DataView {
         vals = vals.map((v) {
           return types[type].numeric(v);
         });
-        return _.mean(vals);
+        return _mean(vals);
       });
 }

@@ -46,7 +46,7 @@ class Product {
   // This is a callback method that is responsible for recomputing
   // the value based on the column its closed on.
   void _sync(event) {
-    func(this);
+    func(this, false);
   }
 
   // builds a delta object.
@@ -61,7 +61,7 @@ class Product {
 //      type = type ?? columnObjects[0].type;
 //      typeOptions = typeOptions ?? columnObjects[0].typeOptions;
       var type = columnObjects[0].type;
-      var typeOptions = null; //columnObjects[0].typeOptions;
+      var typeOptions = columnObjects[0].format; //typeOptions;
 
       //define wrapper function to handle coercion
       producer() {

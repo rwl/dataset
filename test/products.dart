@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:test/test.dart';
+import 'package:intl/intl.dart';
 import 'package:dataset/dataset.dart';
 import 'package:dataset/test.dart';
 import 'helpers.dart' as util;
@@ -207,153 +208,161 @@ productsTest() {
       });
     });
 
-//    test("Basic Mean Product", () {
-//      var ds = new Dataset(data: {
-//        'columns': [
-//          {
-//            'name': 'vals',
-//            'data': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-//          },
-//          {
-//            'name': 'valsrandomorder',
-//            'data': [10, 2, 1, 5, 3, 8, 9, 6, 4, 7]
-//          },
-//          {
-//            'name': 'randomvals',
-//            'data': [19, 4, 233, 40, 10, 39, 23, 47, 5, 22]
-//          }
-//        ]
-//      }, strict: true, sync: true);
-//
-//      ds.fetch().then((_) {
-//        Product m = ds.mean(['vals']);
-//        Product m2 = ds.mean(['valsrandomorder']);
-//        Product m3 = ds.mean(['vals', 'valsrandomorder']);
-//
-//        expect(m.val(), equals(5.5));
-//        expect(m2.val(), equals(5.5));
-//        expect(m3.val(), equals(5.5));
-//        expect(ds.mean(['vals', 'valsrandomorder', 'randomvals']).val(),
-//            equals(18.4));
-//
-//        m.onChange.listen((DatasetEvent s) {
-//          expect(s.deltas[0].old, equals(5.5));
-//          expect(m.val(), equals(6.4));
-//        });
-//
-//        m2.onChange.listen((s) {
-//          expect(s.deltas[0].old, equals(5.5));
-//          expect(m2.val(), equals(6.4));
-//        });
-//
-//        m3.onChange.listen((s) {
-//          expect(s.deltas[0].old, equals(5.5));
-//          expect(m3.val(), equals(5.95));
-//        });
-//
-//        ds.update(rowIdByPosition(ds)[0], {'vals': 10, 'valsrandomorder': 10});
-//      });
-//    });
-//
-//    test("Basic Mean Product Non Syncable", () {
-//      var ds = new Dataset(data: {
-//        'columns': [
-//          {
-//            'name': 'vals',
-//            'data': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-//          },
-//          {
-//            'name': 'valsrandomorder',
-//            'data': [10, 2, 1, 5, 3, 8, 9, 6, 4, 7]
-//          },
-//          {
-//            'name': 'randomvals',
-//            'data': [19, 4, 233, 40, 10, 39, 23, 47, 5, 22]
-//          }
-//        ]
-//      }, strict: true);
-//
-//      ds.fetch().then((_) {
-//        Product m = ds.mean(['vals']);
-//        Product m2 = ds.mean(['valsrandomorder']);
-//        Product m3 = ds.mean(['vals', 'valsrandomorder']);
-//        Product m4 = ds.mean(['vals', 'valsrandomorder', 'randomvals']);
-//
-//        expect(m, equals(5.5));
-//        expect(m2, equals(5.5));
-//        expect(m3, equals(5.5));
-//        expect(m4, equals(18.4));
-//
-//        ds.update(rowIdByPosition(ds)[0], {'vals': 10, 'valsrandomorder': 10});
-//
-//        expect(m, equals(5.5));
-//        expect(m2, equals(5.5));
-//        expect(m3, equals(5.5));
-//        expect(m4, equals(18.4));
-//      });
-//    });
-//
-//    test("Basic Time Mean Product", () {
-//      var ds = new Dataset(data: [
-//        {"one": 1, "t": "2010/01/01"},
-//        {"one": 5, "t": "2010/01/15"},
-//        {"one": 10, "t": "2010/01/30"}
-//      ], columns: [
-//        {'name': "t", 'type': "time", 'format': 'yyyy/MM/dd'}
-//      ], sync: true);
-//
-//      ds.fetch().then((_) {
-//        Product meantime = ds.mean(["t"]);
-//        expect(meantime.val(), equals(new DateTime(2010, 01, 15)));
-//
-//        meantime.onChange.listen((_) {
-//          expect(meantime.val(), equals(new DateTime(2010, 01, 10)));
-//        });
-//
-//        ds.update({'_id': rowIdByPosition(ds)[2], 't': "2010/01/20"}, true);
-//        ds.update({'_id': rowIdByPosition(ds)[1], 't': "2010/01/10"});
-//      });
-//    });
-//  });
-//
-//  // TODO: add time mean product here!!!
-//
-//  group("Products :: Sync", () {
-//    test("Basic Sync Recomputation", () async {
-//      var ds = await util.baseSyncingSample();
-//      var max = ds.max(["one"]);
-//
-//      expect(max.val(), equals(3), reason: "old max correct");
-//
-//      ds.update({'_id': rowIdByPosition(ds)[0], 'one': 22});
-//
-//      expect(max.val(), equals(22), reason: "max was updated");
-//    });
-//
-//    test("Basic Sync No Recomputation Non Syncing", () async {
-//      var ds = await util.baseSample();
-//      var max = ds.max(["one"]);
-//
-//      expect(max, equals(3), reason: "old max correct");
-//
-//      ds.update(rowIdByPosition(ds)[0], {'one': 22});
-//
-//      expect(max, equals(3), reason: "max was not updated");
-//    });
-//
+    test("Basic Mean Product", () {
+      var ds = new Dataset(data: {
+        'columns': [
+          {
+            'name': 'vals',
+            'data': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+          },
+          {
+            'name': 'valsrandomorder',
+            'data': [10, 2, 1, 5, 3, 8, 9, 6, 4, 7]
+          },
+          {
+            'name': 'randomvals',
+            'data': [19, 4, 233, 40, 10, 39, 23, 47, 5, 22]
+          }
+        ]
+      }, strict: true, sync: true);
+
+      ds.fetch().then((_) {
+        Product m = ds.mean(['vals']);
+        Product m2 = ds.mean(['valsrandomorder']);
+        Product m3 = ds.mean(['vals', 'valsrandomorder']);
+
+        expect(m.val(), equals(5.5));
+        expect(m2.val(), equals(5.5));
+        expect(m3.val(), equals(5.5));
+        expect(ds.mean(['vals', 'valsrandomorder', 'randomvals']).val(),
+            equals(18.4));
+
+        m.onChange.listen((DatasetEvent s) {
+          expect(s.deltas[0].old, equals(5.5));
+          expect(m.val(), equals(6.4));
+        });
+
+        m2.onChange.listen((s) {
+          expect(s.deltas[0].old, equals(5.5));
+          expect(m2.val(), equals(6.4));
+        });
+
+        m3.onChange.listen((s) {
+          expect(s.deltas[0].old, equals(5.5));
+          expect(m3.val(), equals(5.95));
+        });
+
+        ds.update(
+            {'_id': rowIdByPosition(ds)[0], 'vals': 10, 'valsrandomorder': 10});
+      });
+    });
+
+    test("Basic Mean Product Non Syncable", () {
+      var ds = new Dataset(data: {
+        'columns': [
+          {
+            'name': 'vals',
+            'data': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+          },
+          {
+            'name': 'valsrandomorder',
+            'data': [10, 2, 1, 5, 3, 8, 9, 6, 4, 7]
+          },
+          {
+            'name': 'randomvals',
+            'data': [19, 4, 233, 40, 10, 39, 23, 47, 5, 22]
+          }
+        ]
+      }, strict: true);
+
+      ds.fetch().then((_) {
+        var m = ds.mean(['vals']);
+        var m2 = ds.mean(['valsrandomorder']);
+        var m3 = ds.mean(['vals', 'valsrandomorder']);
+        var m4 = ds.mean(['vals', 'valsrandomorder', 'randomvals']);
+
+        expect(m, equals(5.5));
+        expect(m2, equals(5.5));
+        expect(m3, equals(5.5));
+        expect(m4, equals(18.4));
+
+        ds.update(
+            {'_id': rowIdByPosition(ds)[0], 'vals': 10, 'valsrandomorder': 10});
+
+        expect(m, equals(5.5));
+        expect(m2, equals(5.5));
+        expect(m3, equals(5.5));
+        expect(m4, equals(18.4));
+      });
+    });
+
+    test("Basic Time Mean Product", () {
+      var fmt = new DateFormat.yMd();
+      var ds = new Dataset(data: [
+        {"one": 1, "t": "2010/01/01"},
+        {"one": 5, "t": "2010/01/15"},
+        {"one": 10, "t": "2010/01/30"}
+      ], columns: [
+        {'name': "t", 'type': "time", 'format': 'yyyy/MM/dd'}
+      ], sync: true);
+
+      ds.fetch().then((_) {
+        Product meantime = ds.mean(["t"]);
+        expect(fmt.format(meantime.val()),
+            equals(fmt.format(new DateTime(2010, 01, 15))));
+
+        meantime.onChange.listen((_) {
+          expect(fmt.format(meantime.val()),
+              equals(fmt.format(new DateTime(2010, 01, 10))));
+        });
+
+        ds.update({'_id': rowIdByPosition(ds)[2], 't': "2010/01/20"}, true);
+        ds.update({'_id': rowIdByPosition(ds)[1], 't': "2010/01/10"});
+      });
+    });
+  });
+
+  // TODO: add time mean product here!!!
+
+  group("Products :: Sync", () {
+    test("Basic Sync Recomputation", () async {
+      var ds = await util.baseSyncingSample();
+      var max = ds.max(["one"]);
+
+      expect(max.val(), equals(3), reason: "old max correct");
+
+      ds.update({'_id': rowIdByPosition(ds)[0], 'one': 22});
+
+      ds.onUpdate.listen((_) {
+        expect(max.val(), equals(22), reason: "max was updated");
+      });
+    });
+
+    test("Basic Sync No Recomputation Non Syncing", () async {
+      var ds = await util.baseSample();
+      var max = ds.max(["one"]);
+
+      expect(max, equals(3), reason: "old max correct");
+
+      ds.update({'_id': rowIdByPosition(ds)[0], 'one': 22});
+
+      expect(max, equals(3), reason: "max was not updated");
+    });
+
 //    test("Basic subscription to product changes", () async {
 //      var ds = await util.baseSyncingSample();
 //      Product max = ds.max(["one"]);
-//      var counter = 0;
 //
-//      max.onChange.listen((_) {
-//        counter += 1;
+////      max.onChange.listen(expectAsync((ev) {
+////        expect(ev, isNotNull);
+////      }, count: 2));
+//
+//      max.onChange.listen((ev) {
+//        print(ev);
 //      });
 //
 //      ds.update({'_id': rowIdByPosition(ds)[0], 'one': 22});
 //      ds.update({'_id': rowIdByPosition(ds)[0], 'one': 34});
-//
-//      expect(counter, equals(2));
 //    });
 
     test("Basic subscription to product changes on syncable doesn't trigger",
