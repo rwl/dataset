@@ -79,27 +79,10 @@ class Column {
       m += numericAt(j);
     }
     m /= data.length;
-    return types[type].coerce(m);
+    return types[type].coerce(m, format);
   }
 
-  _median() {
-//    var mid = (data.length + 1) / 2;
-    var d = new List.from(data)..sort;
-    var med;
-//    if (sorted.length % 2 != 0) {
-//      med = sorted[(mid - 1).toInt()];
-//    } else {
-//      med = (sorted[(mid - 1.5).toInt()] + sorted[(mid - 0.5).toInt()]) / 2;
-//    }
-
-    var n = data.length;
-    if (n % 2 != 0) {
-      med = d[(n - 1) ~/ 2];
-    } else {
-      med = (d[n ~/ 2] + d[(n ~/ 2) - 1]) / 2;
-    }
-    return types[type].coerce(med);
-  }
+  _median() => types[type].coerce(__median(data), format);
 
   _max() {
     var max = double.NEGATIVE_INFINITY;
@@ -112,7 +95,7 @@ class Column {
       }
     }
 
-    return types[this.type].coerce(max);
+    return types[this.type].coerce(max, format);
   }
 
   _min() {
@@ -125,7 +108,7 @@ class Column {
         }
       }
     }
-    return types[type].coerce(min);
+    return types[type].coerce(min, format);
   }
 }
 

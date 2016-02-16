@@ -83,30 +83,30 @@ viewTest() {
       });
     });
 
-    test("Column before function", () {
-      var ds = new Dataset(data: {
-        'columns': [
-          {
-            'name': 'vals',
-            'data': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-          }
-        ]
-      }, columns: [
-        {'name': 'vals', 'type': 'number', 'before': (v) => v * 10}
-      ], strict: true);
+//    test("Column before function", () {
+//      var ds = new Dataset(data: {
+//        'columns': [
+//          {
+//            'name': 'vals',
+//            'data': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+//          }
+//        ]
+//      }, columns: [
+//        {'name': 'vals', 'type': 'number', 'before': (v) => v * 10}
+//      ], strict: true);
+//
+//      ds.fetch().then((_) {
+//        expect(ds.sum(["vals"]), equals(550));
+//        expect(ds.column("vals").data,
+//            equals([10, 20, 30, 40, 50, 60, 70, 80, 90, 100]),
+//            reason: "${ds.column("vals").data}");
+//        ds.update({'_id': columns(ds)[0].data[0], 'vals': 4});
+//        expect(ds.column('vals').data[0], 40);
+//      });
+//    });
+//  });
 
-      ds.fetch().then((_) {
-        expect(ds.sum("vals"), equals(550));
-        expect(ds.column("vals").data,
-            equals([10, 20, 30, 40, 50, 60, 70, 80, 90, 100]),
-            reason: "${ds.column("vals").data}");
-        ds.update({'_id': columns(ds)[0].data[0], 'vals': 4});
-        expect(ds.column('vals').data[0], 40);
-      });
-    });
-  });
-
-  /*group("Views", () {
+    /*group("Views", () {
     test("Basic View creation", () {
       var ds = util.baseSample();
       var view = ds.where({});
@@ -1064,8 +1064,8 @@ viewTest() {
             }),
             reason: "${j[5]}");
       });
-    });
-  });*/
+    });*/
+  });
 }
 
 main() => viewTest();

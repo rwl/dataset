@@ -2,7 +2,7 @@ import 'package:test/test.dart';
 import 'package:dataset/dataset.dart';
 
 eventsTest() {
-  group("Events", () {
+  /*group("Events", () {
     test("binding and firing an event", () {
       var ds = new Dataset(data: {
         'columns': [
@@ -47,7 +47,7 @@ eventsTest() {
       ds.publish('ping');
       expect(result, equals(1));
     });
-  });
+  });*/
   group("Event Object", () {
     test("affectedColumns for add event", () {
       var ds = new Dataset(data: {

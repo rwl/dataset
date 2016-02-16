@@ -36,6 +36,25 @@ Iterable<dynamic> _flatten(Iterable<dynamic> iter) =>
 
 _mean(Iterable data) => data.reduce((a, b) => a + b) / data.length;
 
+__median(List data) {
+  var d = new List.from(data);
+  d.sort();
+
+//    var mid = (data.length + 1) / 2;
+//    if (d.length % 2 != 0) {
+//      med = d[(mid - 1).toInt()];
+//    } else {
+//      med = (d[(mid - 1.5).toInt()] + d[(mid - 0.5).toInt()]) / 2;
+//    }
+
+  var n = data.length;
+  if (n % 2 != 0) {
+    return d[(n - 1) ~/ 2];
+  } else {
+    return (d[n ~/ 2] + d[(n ~/ 2) - 1]) / 2;
+  }
+}
+
 class ColumnDef {
   final String name;
   final /*DataType*/ String type;
