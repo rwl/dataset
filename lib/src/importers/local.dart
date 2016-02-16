@@ -1,26 +1,13 @@
 part of dataset;
 
+/// Responsible for just using a data object and passing it appropriately.
 class Local implements Importer {
-  /**
-   * Responsible for just using a data object and passing it appropriately.
-   *
-   * @constructor
-   * @name Local
-   * @memberof Miso.Dataset.Importers
-   * @augments Miso.Dataset.Importers.Remote
-   *
-   * @param {Object} [options]
-   * @param {Object} options.data local object containing your data
-   * @param {Function} options.extract override for Dataset.Importers.prototype.extract
-   *
-   * @externalExample {runnable} importers/local
-   */
-  Local(options) {
-    options = options || {};
+  final data;
+  final Function extract;
 
-    this.data = options.data || null;
-    this.extract = options.extract || this.extract;
-  }
+  Local(data, extract)
+      : data = data,
+        extract = extract ?? Importer.identity;
 
   fetch(options) {
     var data = options.data ? options.data : this.data;

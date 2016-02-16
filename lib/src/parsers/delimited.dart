@@ -1,49 +1,34 @@
 part of dataset;
 
+/// Handles CSV and other delimited data.
+///
+/// The delimited parser will assign custom column names in case the
+/// header row exists, but has missing values. They will be of the form XN
+/// where N starts at 0.
 class Delimited implements Parser {
-  /**
-   * Handles CSV and other delimited data.
-   *
-   * **Note:** The delimited parser will assign custom column names in case the
-   * header row exists, but has missing values. They will be of the form XN
-   * where N starts at 0.
-   *
-   * @constructor
-   * @name Delimited
-   * @memberof Miso.Dataset.Parsers
-   * @augments Miso.Dataset.Parsers
-   *
-   * @param {Object} [options]
-   * @param {String} options.delimiter. Default: ","
-   */
-  Delimited(options) {
-    options = options || {};
+  final String delimiter;
+  final int skipRows;
+  final emptyValue;
+  RegExp __delimiterPatterns;
 
-    this.delimiter = options.delimiter || ",";
+  Delimited({this.delimiter: ",", this.skipRows: 0, this.emptyValue}) {
+    __delimiterPatterns = new RegExp(
+//        (
+        // Delimiters.
+        "(\\$delimiter|\\r?\\n|\\r|^)"
 
-    this.skipRows = options.skipRows || 0;
+        // Quoted fields.
+        "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|"
 
-    this.emptyValue = options.emptyValue || null;
-
-    this.__delimiterPatterns = new RegExp(
-        (
-            // Delimiters.
-            "(\\" +
-                this.delimiter +
-                "|\\r?\\n|\\r|^)" +
-
-                // Quoted fields.
-                "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
-
-                // Standard fields.
-                "([^\"\\" +
-                this.delimiter +
-                "\\r\\n]*))"),
-        "gi");
+        // Standard fields.
+        "([^\"\\$delimiter\\r\\n]*))");
+//    , "gi");
   }
 
-  parse(data) {
-    var columns = [], columnData = {}, uniqueSequence = {};
+  Parsed parse(data) {
+    var columns = [];
+    var columnData = {};
+    var uniqueSequence = {};
 
     var uniqueId = (str) {
       if (!uniqueSequence[str]) {
@@ -54,14 +39,15 @@ class Delimited implements Parser {
       return id;
     };
 
-    parseCSV(delimiterPattern, strData, strDelimiter, skipRows, emptyValue) {
+    parseCSV(RegExp delimiterPattern, String strData, String strDelimiter,
+        int skipRows, emptyValue) {
       // Check to see if the delimiter is defined. If not,
       // then default to comma.
-      strDelimiter = (strDelimiter || ",");
+      strDelimiter = (strDelimiter ?? ",");
 
       // Create an array to hold our individual pattern
       // matching groups.
-      var arrMatches = null;
+      List arrMatches = null;
 
       // track how many columns we have. Once we reach a new line
       // mark a flag that we're done calculating that.
@@ -113,7 +99,7 @@ class Delimited implements Parser {
             // if we caught less items than we expected, throw an error
             if (columnIndex < columnCount - 1) {
               rowIndex--;
-              throw new Error("Not enough items in row");
+              throw "Not enough items in row";
             }
 
             // We are clearly done computing columns.

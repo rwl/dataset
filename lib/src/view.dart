@@ -148,6 +148,10 @@ class DataView {
   Function comparator;
   List<Column> _computedColumns;
 
+  DataView._()
+      : parent = null,
+        filter = null;
+
   /// A `DataView` is an immutable version of dataset. It is the result of
   /// selecting a subset of the data using the [Dataset.where] call.
   /// If the dataset is syncing, this view will be updated when changes take

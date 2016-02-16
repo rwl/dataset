@@ -28,8 +28,8 @@ class Builder {
   }
 
   /// Detects the types of all columns in a dataset.
-  static void detectColumnTypes(Dataset dataset, List parsedData) {
-    parsedData.forEach((data, columnName) {
+  static void detectColumnTypes(Dataset dataset, Map<String, List> parsedData) {
+    parsedData.forEach((columnName, data) {
       var column = dataset.column(columnName);
 
       // check if the column already has a type defined
@@ -37,7 +37,7 @@ class Builder {
         column.force = true;
         return;
       } else {
-        Dataset.Builder.detectColumnType(column, data);
+        Builder.detectColumnType(column, data);
       }
     });
   }
