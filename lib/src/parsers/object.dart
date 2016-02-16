@@ -1,33 +1,25 @@
 part of dataset;
 
+/// Converts an array of objects to strict format. Each object is a flat json
+/// object of properties.
 class Obj implements Parser {
-  /**
-   * Converts an array of objects to strict format. Each object is a flat json
-   * object of properties.
-   *
-   * @constructor
-   * @name Obj
-   * @memberof Miso.Dataset.Parsers
-   * @memberof Miso.Dataset.Parsers
-   */
-  Obj();
-
-  parse(data) {
-    var columns = _.keys(data[0]), columnData = {};
+  Parsed parse(data) {
+    var columns = data[0].keys.toList();
+    var columnData = {};
 
     //create the empty arrays
-    _.each(columns, (key) {
+    columns.forEach((key) {
       columnData[key] = [];
     });
 
     // iterate over properties in each row and add them
     // to the appropriate column data.
-    _.each(columns, (col) {
-      _.times(data.length, (i) {
-        columnData[col].push(data[i][col]);
+    columns.forEach((col) {
+      range(data.length).forEach((i) {
+        columnData[col].add(data[i.toInt()][col]);
       });
     });
 
-    return {columns: columns, data: columnData};
+    return new Parsed._(columns, columnData);
   }
 }

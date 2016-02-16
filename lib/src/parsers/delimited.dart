@@ -11,7 +11,8 @@ class Delimited implements Parser {
   final emptyValue;
   RegExp __delimiterPatterns;
 
-  Delimited({this.delimiter: ",", this.skipRows: 0, this.emptyValue}) {
+  Delimited({delimiter, this.skipRows: 0, this.emptyValue})
+      : delimiter = delimiter ?? "," {
     __delimiterPatterns = new RegExp(
 //        (
         // Delimiters.

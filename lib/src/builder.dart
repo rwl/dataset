@@ -7,14 +7,15 @@ class Builder {
   static Column detectColumnType(Column column, List data) {
     // compute the type by assembling a sample of computed types
     // and then squashing it to create a unique subset.
-    var type = _.inject(data.slice(0, 5), (memo, value) {
-      var t = Dataset.typeOf(value);
+    var type =
+        data.sublist(0, math.min(data.length, 5)).fold([], (memo, value) {
+      var t = typeOf(value);
 
-      if (value != "" && memo.indexOf(t) == -1 && !_.isNull(value)) {
-        memo.push(t);
+      if (value != "" && memo.indexOf(t) == -1 && value != null) {
+        memo.add(t);
       }
       return memo;
-    }, []);
+    });
 
     // if we only have one type in our sample, save it as the type
     if (type.length == 1) {
@@ -33,7 +34,7 @@ class Builder {
       var column = dataset.column(columnName);
 
       // check if the column already has a type defined
-      if (column.type) {
+      if (column.type != null) {
         column.force = true;
         return;
       } else {
@@ -50,24 +51,24 @@ class Builder {
 
     // cache the row id positions in both directions.
     // iterate over the _id column and grab the row ids
-    dataset._columns[dataset._columnPositionByName[dataset.idAttribute]]
-        .data
-        .forEach((id, index) {
-      dataset._rowPositionById[id] = index;
-      dataset._rowIdByPosition.push(id);
+    enumerate(dataset._columns[
+        dataset._columnPositionByName[dataset.idAttribute]].data).forEach((iv) {
+      var id = iv.value;
+      dataset._rowPositionById[id] = iv.index;
+      dataset._rowIdByPosition.add(id);
     });
 
     // cache the total number of rows. There should be same
     // number in each column's data
-    var rowLengths = _.uniq(dataset._columns.map((column) {
+    var rowLengths = dataset._columns.map((column) {
       return column.data.length;
-    }));
+    }).toSet();
 
     if (rowLengths.length > 1) {
       throw "Row lengths need to be the same. Empty values should be set to null." +
-          dataset._columns.map((c) => "${c.data}|||");
+          dataset._columns.map((c) => "${c.data}|||").join();
     } else {
-      dataset.length = rowLengths[0];
+      dataset.length = rowLengths.first;
     }
   }
 

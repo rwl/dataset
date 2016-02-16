@@ -9,8 +9,9 @@ class Local implements Importer {
       : data = data,
         extract = extract ?? Importer.identity;
 
-  fetch(options) {
-    var data = options.data ? options.data : this.data;
-    options.success(this.extract(data));
+  Future fetch(/*options*/) {
+//    var data = options.data ? options.data : this.data;
+//    options.success(extract(data));
+    return new Future.value(extract(data));
   }
 }

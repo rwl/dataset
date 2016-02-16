@@ -55,11 +55,13 @@ class Product {
 //  }
 
   /// Use this to define a new product.
-  static ProductFunc define(DataView dv, dynamic func(columns, silent)) {
-    return (columns, [type, typeOptions]) {
+  static ProductFunc define(DataView dv, dynamic func(columns /*, silent*/)) {
+    return ([List<String> columns] /*, [type, typeOptions]*/) {
       var columnObjects = dv._findColumns(columns);
-      type = type ?? columnObjects[0].type;
-      typeOptions = typeOptions ?? columnObjects[0].typeOptions;
+//      type = type ?? columnObjects[0].type;
+//      typeOptions = typeOptions ?? columnObjects[0].typeOptions;
+      var type = columnObjects[0].type;
+      var typeOptions = null; //columnObjects[0].typeOptions;
 
       //define wrapper function to handle coercion
       producer() {

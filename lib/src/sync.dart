@@ -1,7 +1,8 @@
 part of dataset;
 
 class Delta {
-  final Map old, changed;
+  final Map old;
+  final changed;
   final id;
   Delta._({this.old, this.changed, this.id});
 

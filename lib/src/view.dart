@@ -2,15 +2,16 @@ part of dataset;
 
 class Column {
   final String name;
-  final String type;
+  /*final*/ String type;
   List data;
+  bool force = false;
 
   /// Function to pre-process a column's value before it is coerced.
   final Function before;
 
   /// Only set if time type.
   final String format;
-  String _id;
+  var _id;
 
   /// Only set for computed columns;
   Function func;
@@ -104,7 +105,8 @@ class Column {
     var max = double.NEGATIVE_INFINITY;
     for (var j = 0; j < data.length; j++) {
       if (data[j] != null) {
-        if (types[type].compare(data[j], max) > 0) {
+        var n = types[type].numeric(data[j]);
+        if (types['number'].compare(n, max) > 0) {
           max = this.numericAt(j);
         }
       }
@@ -117,7 +119,8 @@ class Column {
     var min = double.INFINITY;
     for (var j = 0; j < data.length; j++) {
       if (data[j] != null) {
-        if (types[type].compare(data[j], min) < 0) {
+        var n = types[type].numeric(data[j]);
+        if (types['number'].compare(n, min) < 0) {
           min = numericAt(j);
         }
       }
@@ -142,7 +145,7 @@ class DataView {
   List<Column> _columns;
 
   Map _rowPositionById;
-  Map _columnPositionByName;
+  Map<String, int> _columnPositionByName;
   List _rowIdByPosition;
   int length;
   Function comparator;
@@ -183,6 +186,8 @@ class DataView {
     if (parent.syncable == true) {
 //      _.extend(this, Miso.Events);
       syncable = true;
+    } else {
+      syncable = false;
     }
 
     idAttribute = parent.idAttribute;
@@ -386,7 +391,11 @@ class DataView {
       return null;
     }
     var pos = _columnPositionByName[name];
-    return _columns[pos];
+    if (pos != null && pos >= 0 && pos < _columns.length) {
+      return _columns[pos];
+    } else {
+      return null;
+    }
   }
 
   /// Dataset view of the given columns.
@@ -409,10 +418,10 @@ class DataView {
 
   /// The names of all columns, not including id column.
   List<String> columnNames() {
-    var cols = _columns.pluck('name');
-    return cols.reject((colName) {
-      return colName == idAttribute || colName == '_oids';
-    });
+    var cols = _columns.map((c) => c.name);
+    return cols.where((colName) {
+      return colName != idAttribute && colName != '_oids';
+    }).toList();
   }
 
   /// Checks for the existance of a column and returns true/false
@@ -479,7 +488,7 @@ class DataView {
 
   void _add(Map row, [bool silent = false]) {
     // first coerce all the values appropriatly
-    row.forEach((value, key) {
+    row.forEach((key, value) {
       var column = this.column(key);
 
       // is this a computed column? if so throw an error
@@ -493,17 +502,17 @@ class DataView {
         var typ = types[column.type];
 
         // test if value matches column type
-        if (column.force || typ.test(row[column.name], column)) {
+        if (column.force || typ.test(row[column.name], column.format)) {
           // do we have a before filter? If so, pass it through that first
           if (column.before != null) {
             row[column.name] = column.before(row[column.name]);
           }
 
           // coerce it.
-          row[column.name] = typ.coerce(row[column.name], column);
+          row[column.name] = typ.coerce(row[column.name], column.format);
         } else {
           throw ("incorrect value '${row[column.name]}' of type " +
-              typeOf(row[column.name], column) +
+              typeOf(row[column.name], column.format) +
               " passed to column '${column.name}' with type ${column.type}");
         }
       }

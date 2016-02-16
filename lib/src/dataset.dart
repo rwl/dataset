@@ -69,7 +69,7 @@ class Dataset extends DataView {
       /// When using the [Delimited] parser this is used to set
       /// a custom field delimiter such as `delimiter: '||'` for
       /// CSV files such as `value1||value2`
-      String delimiter: ",",
+      String delimiter,
       int skipRows: 0,
       emptyValue,
 
@@ -104,7 +104,7 @@ class Dataset extends DataView {
 
       /// Set to true if any subsequent fetches after first one should
       /// overwrite the current data.
-      bool resetOnFetch,
+      bool resetOnFetch: false,
 
       /// Set to a column name to check for duplication on subsequent fetches.
       String uniqueAgainst,
@@ -153,6 +153,8 @@ class Dataset extends DataView {
     if (sync == true) {
 //      _.extend(this, Miso.Events);
       syncable = true;
+    } else {
+      syncable = false;
     }
 
     this.idAttribute = idAttribute ?? '_id';
@@ -300,6 +302,7 @@ class Dataset extends DataView {
 
       // Ensure the context of the promise is set to the Dataset
 //      dfd.resolveWith(this, [this]);
+      return this;
     });
     /*, onError: (e) {
       if (options.error) {
@@ -356,8 +359,8 @@ class Dataset extends DataView {
     var rows = [];
 
     // figure out the length of rows we have.
-    var colNames = data.keys;
-    int dataLength = colNames.map((name) => data[name].length).reduce(max);
+    var colNames = data.keys.toList();
+    int dataLength = colNames.map((name) => data[name].length).reduce(math.max);
 
     // build row objects
     for (var i = 0; i < dataLength; i++) {
