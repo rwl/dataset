@@ -19,7 +19,7 @@ class Remote implements Importer {
    *
    * @externalExample {runnable} importers/remote
    */
-  Remote(options) {
+  Remote(url, extract, String dataType, bool jsonp, callback, headers) {
     options = options || {};
 
     this._url = options.url;

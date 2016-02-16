@@ -2,10 +2,11 @@ part of dataset;
 
 class Delta {
   final Map old, changed;
-  Delta._({this.old, this.changed});
+  final id;
+  Delta._({this.old, this.changed, this.id});
 
   bool isRemove() {
-    if (changed == null || changed.keys.length == 0) {
+    if (changed == null || changed.length == 0) {
       return true;
     } else {
       return false;
@@ -14,7 +15,7 @@ class Delta {
 
   /// Returns true if the event is an add event.
   bool isAdd() {
-    if (old == null || old.keys.length == 0) {
+    if (old == null || old.length == 0) {
       return true;
     } else {
       return false;
@@ -46,10 +47,9 @@ class DatasetEvent {
   List affectedColumns() {
     var cols = [];
     deltas.forEach((Delta delta) {
-      delta.old = (delta.old ?? []);
-      delta.changed = (delta.changed ?? []);
-      cols =
-          _.chain(cols).union(delta.old.keys, delta.changed.keys).reject((col) {
+      var old = (delta.old ?? []);
+      var changed = (delta.changed ?? []);
+      cols = _.chain(cols).union(old.keys, changed.keys).reject((col) {
         return col == dataset.idAttribute;
       }).value();
     });

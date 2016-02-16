@@ -18,9 +18,9 @@ class Column {
   /// Column objects make up the columns contained in a dataset and
   /// are returned by some methods such as [DataView.column].
   Column(this.name, this.type,
-      {List data_, before_(value), String id, this.format})
-      : data = (data_ == null ? [] : data_),
-        before = (before_ == null ? (v) => v : before_) {
+      {List data, before(value), String id, this.format, this.func})
+      : data = (data == null ? [] : data),
+        before = (before == null ? (v) => v : before) {
     _id = (id != null) ? id : uniqueId();
   }
 
@@ -148,6 +148,18 @@ class DataView {
   Function comparator;
   List<Column> _computedColumns;
 
+  StreamController<DatasetEvent> _addCtrl = new StreamController.broadcast();
+  StreamController<DatasetEvent> _changeCtrl = new StreamController.broadcast();
+  StreamController<DatasetEvent> _updateCtrl = new StreamController.broadcast();
+  StreamController<DatasetEvent> _removeCtrl = new StreamController.broadcast();
+  StreamController _resetCtrl = new StreamController.broadcast();
+
+  Stream<DatasetEvent> get onAdd => _addCtrl.stream;
+  Stream<DatasetEvent> get onChange => _changeCtrl.stream;
+  Stream<DatasetEvent> get onUpdate => _updateCtrl.stream;
+  Stream<DatasetEvent> get onRemove => _removeCtrl.stream;
+  Stream get onReset => _resetCtrl.stream;
+
   DataView._()
       : parent = null,
         filter = null;
@@ -162,18 +174,18 @@ class DataView {
     if (parent == null) {
       throw new ArgumentError.notNull('parent');
     }
-    _initialize(options);
-  }
-
-  _initialize(options) {
+//    _initialize(options);
+//  }
+//
+//  _initialize(options) {
     // is this a syncable dataset? if so, pull
     // required methoMiso and mark this as a syncable dataset.
     if (parent.syncable == true) {
-      _.extend(this, Miso.Events);
-      this.syncable = true;
+//      _.extend(this, Miso.Events);
+      syncable = true;
     }
 
-    this.idAttribute = this.parent.idAttribute;
+    idAttribute = parent.idAttribute;
 
     // save filter
 //    this.filter = {};
@@ -183,31 +195,33 @@ class DataView {
 //        _.bind(this._rowFilter(options.filter.rows || undefined), this);
 
     // initialize columns.
-    _columns = this._selectData();
+    _columns = _selectData();
 
     Builder.cacheColumns(this);
     Builder.cacheRows(this);
 
     // bind to parent if syncable
     if (syncable) {
-      parent.subscribe("change", this._sync, context: this);
+      parent.onChange.listen(_sync);
     }
   }
 
   /// Syncs up the current view based on a passed delta.
   _sync(DatasetEvent event) {
-    var deltas = event.deltas, eventType = null;
+    var deltas = event.deltas;
+    String eventType = null;
 
     // iterate over deltas and update rows that are affected.
     enumerate(deltas).forEach((iv) {
-      var d = iv.value, deltaIndex = iv.index;
+      Delta d = iv.value;
+      var deltaIndex = iv.index;
 
       // find row position based on delta _id
       var rowPos = this._rowPositionById[d[this.idAttribute]];
 
       // ==== ADD NEW ROW
 
-      if (/*typeof*/ rowPos == "undefined" && DatasetEvent.isAdd(d)) {
+      if (rowPos == null && d.isAdd()) {
         // this is an add event, since we couldn't find an
         // existing row to update and now need to just add a new
         // one. Use the delta's changed properties as the new row
@@ -223,7 +237,7 @@ class DataView {
         }
 
         // iterate over each changed property and update the value
-        _.each(d.changed, (newValue, columnName) {
+        d.changed.forEach((columnName, newValue) {
           // find col position based on column name
           var colPos = this._columnPositionByName[columnName];
           if (_.isUndefined(colPos)) {
@@ -280,7 +294,7 @@ class DataView {
       // check if this column passes the column filter
       if (filterColumns(parentColumn)) {
         selectedColumns.add(new Column(parentColumn.name, parentColumn.type,
-            data: [], _id: parentColumn._id));
+            data: [], id: parentColumn._id));
       }
     });
 
@@ -441,7 +455,7 @@ class DataView {
   /// will not alter the original data.
   rowById(num id) => _row(_rowPositionById[id]);
 
-  _row(int pos) {
+  Map _row(int pos) {
     var row = {};
     _columns.forEach((column) {
       row[column.name] = column.data[pos];
@@ -463,7 +477,7 @@ class DataView {
     length--;
   }
 
-  void _add(Map row) {
+  void _add(Map row, [bool silent = false]) {
     // first coerce all the values appropriatly
     row.forEach((value, key) {
       var column = this.column(key);
@@ -618,4 +632,79 @@ class DataView {
     }
     return rows;
   }
+
+  // Products
+
+  // finds the column objects that match the single/multiple
+  // input columns. Helper method.
+  List<Column> _findColumns(List<String> columns) {
+    var columnObjects = [];
+
+    // if no column names were specified, get all column names.
+    if (columns == null) {
+      columns = columnNames();
+    }
+
+    // convert columns to an array in case we only got one column name.
+//    columns = (columns is List) ? columns : [columns];
+
+    // assemble actual column objecets together.
+    columns.forEach((column) {
+      column = _columns[_columnPositionByName[column]];
+      columnObjects.add(column);
+    });
+
+    return columnObjects;
+  }
+
+  /// If the dataset has `sync` enabled this will return a [Product] that
+  /// can be used to bind events to and access the current value. Otherwise
+  /// it will return the current value - the sum of the numeric form of the
+  /// values in the column.
+  ProductFunc get sum => Product.define(this, (columns) {
+        columns.forEach((col) {
+          if (col.type == types['time'].name) {
+            throw "Can't sum up time";
+          }
+        });
+        return columns.map((c) => c._sum()).reduce((a, b) => a + b);
+      });
+
+  /// If the dataset has `sync` enabled this will return a [Product] that
+  /// can be used to bind events to and access the current value. Otherwise
+  /// it will return the current value - the highest numeric value in that
+  /// column.
+  ProductFunc get max => Product.define(this, (columns) {
+        return columns.map((c) => c._max()).reduce(math.max);
+      });
+
+  /// If the dataset has `sync` enabled this will return a [Product] that
+  /// can be used to bind events to and access the current value.  Otherwise
+  /// it will return the current value - the lowest numeric value in that
+  /// column.
+  ProductFunc get min => Product.define(this, (columns) {
+        return columns.map((c) => c._min()).reduce(math.min);
+      });
+
+  /// If the dataset has `sync` enabled this will return a [Product] that
+  /// can be used to bind events to and access the current value.  Otherwise
+  /// it will return the current value - the mean or average of the numeric
+  /// form of the values in the column.
+  ProductFunc get mean => Product.define(this, (columns /*, options*/) {
+        var vals = [];
+        columns.forEach((col) {
+          vals.add(col.data);
+        });
+
+        vals = _.flatten(vals);
+
+        // save types and type options to later coerce
+        var type = columns[0].type;
+
+        // convert the values to their appropriate numeric value
+        vals = vals.map((v) {
+          return types[type].numeric(v);
+        });
+        return _.mean(vals);
+      });
 }

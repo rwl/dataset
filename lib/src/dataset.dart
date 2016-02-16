@@ -1,6 +1,8 @@
 library dataset;
 
+import 'dart:math' as math;
 import 'dart:async' show Future, StreamController, Stream;
+
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:quiver/iterables.dart';
 
@@ -45,11 +47,6 @@ class Dataset extends DataView {
 //  Function deferred;
   bool fetched = false;
   num interval;
-
-  StreamController<DatasetEvent> _addCtrl = new StreamController.broadcast();
-  StreamController<DatasetEvent> _changeCtrl = new StreamController.broadcast();
-  StreamController<DatasetEvent> _removeCtrl = new StreamController.broadcast();
-  StreamController _resetCtrl = new StreamController.broadcast();
 
   Dataset(
       {data,
@@ -181,7 +178,8 @@ class Dataset extends DataView {
     if (this.importer == null) {
       if (url != null) {
         if (interval == null || interval == 0) {
-          this.importer = new Remote();
+          this.importer =
+              new Remote(url, extract, _dataType, jsonp, callback, headers);
         } else {
           this.importer = new Polling();
           this.interval = interval;
@@ -318,18 +316,19 @@ class Dataset extends DataView {
 
   /// Update existing values, used the pass column to match
   /// incoming data to existing rows.
-  againstColumn(Map<String, List<Column>> data) {
-    var rows = [],
-        colNames = data.keys,
-        row,
-        uniqName = uniqueAgainst,
-        uniqCol = column(uniqName),
-        toAdd = [],
-        toUpdate = [],
-        toRemove = [];
+  _againstColumn(Map<String, List<Column>> data) {
+//    var rows = [];
+//    var colNames = data.keys;
+//    var row;
+    var uniqName = uniqueAgainst;
+    var uniqCol = column(uniqName);
+    var toAdd = [];
+    var toUpdate = [];
+//    var toRemove = [];
 
     enumerate(data[uniqName]).forEach((iv) {
-      var key = iv.value, dataIndex = iv.index;
+      var key = iv.value;
+      var dataIndex = iv.index;
 
       var rowIndex = uniqCol.data.indexOf(types[uniqCol.type].coerce(key));
 
@@ -353,7 +352,7 @@ class Dataset extends DataView {
   }
 
   /// Always blindly add new rows.
-  blind(Map<String, List> data) {
+  _blind(Map<String, List> data) {
     var rows = [];
 
     // figure out the length of rows we have.
@@ -373,8 +372,6 @@ class Dataset extends DataView {
   }
 //    }
 
-  var _applications;
-
   /// Takes a dataset and some data and applies one to the other.
   _apply(data) {
     var parsed = this.parser.parse(data);
@@ -383,11 +380,11 @@ class Dataset extends DataView {
     if (!fetched) {
       // create columns (inc _id col.)
       _addIdColumn();
-      addColumns(parsed.keys.map((name) => {'name': name}));
+      addColumns(parsed.columns.map((name) => {'name': name}));
 
       // detect column types, add all rows blindly and cache them.
       Builder.detectColumnTypes(this, parsed.data);
-      this._applications.blind.call(this, parsed.data);
+      _blind(parsed.data);
 
       fetched = true;
 
@@ -397,7 +394,7 @@ class Dataset extends DataView {
       reset();
 
       // blindly add the data.
-      this._applications.blind.call(this, parsed.data);
+      _blind(parsed.data);
 
       // append
     } else if (uniqueAgainst != null) {
@@ -406,11 +403,11 @@ class Dataset extends DataView {
         throw "You requested a unique add against a column that doesn't exist.";
       }
 
-      _applications.againstColumn.call(this, parsed.data);
+      _againstColumn(parsed.data);
 
       // polling fetch, just blindly add rows
     } else {
-      this._applications.blind.call(this, parsed.data);
+      _blind(parsed.data);
     }
 
     Builder.cacheRows(this);
@@ -435,7 +432,7 @@ class Dataset extends DataView {
         throw "The type $type doesn't exist";
       }
 
-      var column = new Column(name, type, func: _.bind(func, this));
+      var column = new Column(name, type, func: func);
 
       _columns.add(column);
       _computedColumns.add(column);
@@ -463,7 +460,7 @@ class Dataset extends DataView {
     }
 
     var column = new Column(col['name'], col['type'],
-        data_: col['data'], id: col['id'], format: col['format']);
+        data: col['data'], id: col['id'], format: col['format']);
 
     _columns.add(column);
     _columnPositionByName[column.name] = _columns.length - 1;
@@ -502,8 +499,8 @@ class Dataset extends DataView {
       var oldIdColPos = _columnPositionByName[idAttribute];
 
       // move col back
-      this._columns.splice(oldIdColPos, 1);
-      this._columns.unshift(idCol);
+      _columns.removeAt(oldIdColPos);
+      _columns.insert(0, idCol);
 
       _columnPositionByName[idAttribute] = 0;
       _columnPositionByName.forEach((colName, pos) {
@@ -525,7 +522,7 @@ class Dataset extends DataView {
     var deltas = [];
 
     rows.forEach((row) {
-      if (!row.containKey(idAttribute)) {
+      if (!row.containsKey(idAttribute)) {
         row[idAttribute] = uniqueId();
       }
 
@@ -578,8 +575,7 @@ class Dataset extends DataView {
   List<Delta> _arrayUpdate(List<Map> rows) {
     var deltas = [];
     rows.forEach((newRow) {
-      var delta = new Delta._(old: {}, changed: {});
-      delta[idAttribute] = newRow[idAttribute];
+      var delta = new Delta._(old: {}, changed: {}, id: newRow[idAttribute]);
 
       var pos = _rowPositionById[newRow[idAttribute]];
       newRow.forEach((prop, value) {
@@ -600,7 +596,7 @@ class Dataset extends DataView {
         }
 
         //skip if computed column
-        if (_computedColumns[column.name]) {
+        if (_computedColumns.contains(column.name)) {
           return;
         }
 
@@ -621,7 +617,7 @@ class Dataset extends DataView {
       // Update any computed columns
       if (_computedColumns != null) {
         _computedColumns.forEach((column) {
-          var temprow = _.extend({}, this._row(pos));
+          var temprow = new Map.from(_row(pos));
           var oldValue = temprow[column.name];
           var newValue = column.compute(temprow, pos);
           if (oldValue != newValue) {
@@ -663,7 +659,7 @@ class Dataset extends DataView {
   void update(rowsOrFunction, [bool silent = false]) {
     var deltas;
 
-    if (rowsOrFunction is Funtion) {
+    if (rowsOrFunction is Function) {
       deltas = _functionUpdate(rowsOrFunction);
     } else {
       var rows = (rowsOrFunction is List) ? rowsOrFunction : [rowsOrFunction];

@@ -53,9 +53,9 @@ viewTest() {
         ]
       }, strict: true);
       ds.fetch().then((_) {
-        expect(ds.column('vals')._median(), equals(5.5));
-        expect(ds.column('valsrandomorder')._median(), equals(5.5));
-        expect(ds.column('randomvals')._median(), equals(22.5));
+        expect(columnMedian(ds.column('vals')), equals(5.5));
+        expect(columnMedian(ds.column('valsrandomorder')), equals(5.5));
+        expect(columnMedian(ds.column('randomvals')), equals(22.5));
       });
     });
 
@@ -77,9 +77,9 @@ viewTest() {
         ]
       }, strict: true);
       ds.fetch().then((_) {
-        expect(ds.column('vals')._mean(), equals(5.5));
-        expect(ds.column('valsrandomorder')._mean(), equals(5.5));
-        expect(ds.column('randomvals')._mean(), equals(44.2));
+        expect(columnMean(ds.column('vals')), equals(5.5));
+        expect(columnMean(ds.column('valsrandomorder')), equals(5.5));
+        expect(columnMean(ds.column('randomvals')), equals(44.2));
       });
     });
 
@@ -100,7 +100,7 @@ viewTest() {
         expect(ds.column("vals").data,
             equals([10, 20, 30, 40, 50, 60, 70, 80, 90, 100]),
             reason: "${ds.column("vals").data}");
-        ds.update({'_id': ds._columns[0].data[0], 'vals': 4});
+        ds.update({'_id': columns(ds)[0].data[0], 'vals': 4});
         expect(ds.column('vals').data[0], 40);
       });
     });
