@@ -19,7 +19,7 @@ class Column {
   /// Column objects make up the columns contained in a dataset and
   /// are returned by some methods such as [DataView.column].
   Column(this.name, this.type,
-      {List data, before(value), String id, this.format, this.func})
+      {List data, before(value), id, this.format, this.func})
       : data = (data == null ? [] : data),
         before = (before == null ? (v) => v : before) {
     _id = (id != null) ? id : uniqueId();
@@ -114,14 +114,14 @@ class Column {
 
 class DataView {
   final Dataset parent;
-  final Function filter;
+  var /*Function*/ filter;
 
   /// A filter for columns. A single or multiple column names.
-  var /*String|String[]*/ filterColumns;
+//  var /*String|String[]*/ filterColumns;
 
   /// A filter for rows. A rowId or a filter function that takes
   /// in a row and returns true if it passes the criteria.
-  var /*Number|Function*/ filterRows;
+//  var /*Number|Function*/ filterRows;
 
   bool syncable;
   String idAttribute;
@@ -137,14 +137,18 @@ class DataView {
   StreamController<DatasetEvent> _addCtrl = new StreamController.broadcast();
   StreamController<DatasetEvent> _changeCtrl = new StreamController.broadcast();
   StreamController<DatasetEvent> _updateCtrl = new StreamController.broadcast();
+  StreamController<DatasetEvent> _deleteCtrl = new StreamController.broadcast();
   StreamController<DatasetEvent> _removeCtrl = new StreamController.broadcast();
   StreamController _resetCtrl = new StreamController.broadcast();
+  StreamController _sortCtrl = new StreamController.broadcast();
 
   Stream<DatasetEvent> get onAdd => _addCtrl.stream;
   Stream<DatasetEvent> get onChange => _changeCtrl.stream;
   Stream<DatasetEvent> get onUpdate => _updateCtrl.stream;
+  Stream<DatasetEvent> get onDelete => _deleteCtrl.stream;
   Stream<DatasetEvent> get onRemove => _removeCtrl.stream;
   Stream get onReset => _resetCtrl.stream;
+  Stream get onSort => _sortCtrl.stream;
 
   DataView._()
       : parent = null,
@@ -156,7 +160,7 @@ class DataView {
   /// place in the original dataset. A [Dataset] also extends from
   /// [DataView]. All the methods available on a dataview will also be
   /// available on the dataset.
-  DataView(this.parent, {this.filter, this.filterColumns, this.filterRows}) {
+  DataView(this.parent, [filter]) {
     if (parent == null) {
       throw new ArgumentError.notNull('parent');
     }
@@ -176,11 +180,11 @@ class DataView {
     idAttribute = parent.idAttribute;
 
     // save filter
-//    this.filter = {};
-//    this.filter.columns =
-//        _.bind(this._columnFilter(options.filter.columns || undefined), this);
-//    this.filter.rows =
-//        _.bind(this._rowFilter(options.filter.rows || undefined), this);
+    this.filter = {};
+//    this.filter['columns'] = _.bind(this._columnFilter(filter['columns']), this);
+//    this.filter['rows'] = _.bind(this._rowFilter(filter['rows']), this);
+    this.filter['columns'] = this._columnFilter(filter['columns']);
+    this.filter['rows'] = this._rowFilter(filter['rows']);
 
     // initialize columns.
     _columns = _selectData();
@@ -205,7 +209,7 @@ class DataView {
       var deltaIndex = iv.index;
 
       // find row position based on delta _id
-      var rowPos = this._rowPositionById[d[this.idAttribute]];
+      var rowPos = this._rowPositionById[d.id];
 
       // ==== ADD NEW ROW
 
@@ -227,14 +231,14 @@ class DataView {
         // iterate over each changed property and update the value
         d.changed.forEach((columnName, newValue) {
           // find col position based on column name
-          var colPos = this._columnPositionByName[columnName];
-          if (_.isUndefined(colPos)) {
+          var colPos = _columnPositionByName[columnName];
+          if (colPos == null) {
             return;
           }
-          this._columns[colPos].data[rowPos] = newValue;
+          _columns[colPos].data[rowPos] = newValue;
 
           eventType = "update";
-        }, this);
+        });
       }
 
       // ==== DELETE ROW (either by event or by filter.)
@@ -244,27 +248,36 @@ class DataView {
 
       // if this is a delete event OR the row no longer
       // passes the filter, remove it.
-      if (Dataset.Event.isRemove(d) ||
-          (this.filter.row && !this.filter.row(row))) {
+      if (d.isRemove() || (filter['row'] != null && !filter['row'](row))) {
         // Since this is now a delete event, we need to convert it
         // to such so that any child views, know how to interpet it.
 
-        var newDelta = {old: this.rowByPosition(rowPos), changed: {}};
-        newDelta[this.idAttribute] = d[this.idAttribute];
+        var newDelta = new Delta._(old: rowByPosition(rowPos), changed: {});
+        newDelta.id = d.id;
 
         // replace the old delta with this delta
-        event.deltas.splice(deltaIndex, 1, newDelta);
+        event.deltas[deltaIndex] = newDelta;
 
         // remove row since it doesn't match the filter.
-        this._remove(rowPos);
+        _remove(rowPos);
         eventType = "delete";
       }
     });
 
     // trigger any subscribers
     if (this.syncable) {
-      this.publish(eventType, event);
-      this.publish("change", event);
+      switch (eventType) {
+        case "add":
+          _addCtrl.add(event);
+          break;
+        case "update":
+          _updateCtrl.add(event);
+          break;
+        case "delete":
+          _deleteCtrl.add(event);
+          break;
+      }
+      _changeCtrl.add(event);
     }
   }
 
@@ -272,15 +285,14 @@ class DataView {
   /// Filtration can be applied to both rows & columns and for syncing
   /// datasets changes in the parent dataset from which the dataview was
   /// created will be reflected in the dataview.
-  DataView where(filter, [filterColumns, filterRows]) => new DataView(this,
-      filter: filter, filterColumns: filterColumns, filterRows: filterRows);
+  DataView where(filter) => new DataView(this, filter);
 
   _selectData() {
-    var selectedColumns = [];
+    var selectedColumns = <Column>[];
 
     parent._columns.forEach((parentColumn) {
       // check if this column passes the column filter
-      if (filterColumns(parentColumn)) {
+      if (filter['columns'](parentColumn)) {
         selectedColumns.add(new Column(parentColumn.name, parentColumn.type,
             data: [], id: parentColumn._id));
       }
@@ -288,12 +300,12 @@ class DataView {
 
     // get the data that passes the row filter.
     parent.each((row, _) {
-      if (!filterRows(row)) {
+      if (!filter['rows'](row)) {
         return;
       }
 
       for (var i = 0; i < selectedColumns.length; i++) {
-        selectedColumns[i].data.push(row[selectedColumns[i].name]);
+        selectedColumns[i].data.add(row[selectedColumns[i].name]);
       }
     });
 
@@ -304,24 +316,22 @@ class DataView {
   ///
   /// Returns normalized version of the column filter function that can be
   /// executed.
-  _columnFilter(columnFilter) {
+  Function _columnFilter(columnFilter) {
     Function columnSelector;
 
     // if no column filter is specified, then just
     // return a passthrough function that will allow
     // any column through.
     if (columnFilter == null) {
-      columnSelector = () {
-        return true;
-      };
+      columnSelector = (Column column) => true;
     } else {
       //array
       if (columnFilter is String) {
         columnFilter = [columnFilter];
       }
       columnFilter.add(idAttribute);
-      columnSelector = (column) {
-        return columnFilter.indexOf(column.name) == -1 ? false : true;
+      columnSelector = (Column column) {
+        return columnFilter.contains(column.name);
       };
     }
 
@@ -329,25 +339,23 @@ class DataView {
   }
 
   /// Returns normalized row filter function that can be executed.
-  _rowFilter(rowFilter) {
+  Function _rowFilter(rowFilter) {
     var rowSelector;
 
     //support for a single ID;
-    if (_.isNumber(rowFilter)) {
+    if (rowFilter is num) {
       rowFilter = [rowFilter];
     }
 
-    if (_.isUndefined(rowFilter)) {
-      rowSelector = () {
-        return true;
-      };
-    } else if (_.isFunction(rowFilter)) {
+    if (rowFilter == null) {
+      rowSelector = (Map row) => true;
+    } else if (rowFilter is Function) {
       rowSelector = rowFilter;
     } else {
       //array
-      rowSelector = _.bind((row) {
-        return _.indexOf(rowFilter, row[this.idAttribute]) == -1 ? false : true;
-      }, this);
+      rowSelector = (Map row) {
+        return rowFilter.contains(row[idAttribute]);
+      };
     }
 
     return rowSelector;
@@ -396,7 +404,7 @@ class DataView {
   ///       print(oneTwo.columnNames());
   ///     });
   DataView columns(List<String> columnsArray) {
-    return new DataView(this, filterColumns: columnsArray);
+    return new DataView(this, {'columns': columnsArray});
   }
 
   /// The names of all columns, not including id column.
@@ -460,12 +468,12 @@ class DataView {
 
     // remove all values
     _columns.forEach((column) {
-      column.data.splice(rowPos, 1);
+      column.data.removeAt(rowPos);
     });
 
     // update caches
     _rowPositionById.remove(rowId);
-    _rowIdByPosition.splice(rowPos, 1);
+    _rowIdByPosition.removeAt(rowPos);
     length--;
   }
 
@@ -536,9 +544,9 @@ class DataView {
       // otherwise insert them in the right place. This is a somewhat
       // expensive operation.
     } else {
-      insertAt(at, value, into) {
-        Array.prototype.splice.apply(into, [at, 0].concat(value));
-      }
+//      insertAt(at, value, into) {
+//        Array.prototype.splice.apply(into, [at, 0].concat(value));
+//      }
 
       var i;
       length++;
@@ -546,8 +554,8 @@ class DataView {
         var row2 = rowByPosition(i);
         if (row2[this.idAttribute] == null || comparator(row, row2) < 0) {
           _columns.forEach((column) {
-            insertAt(
-                i, (row[column.name] ? row[column.name] : null), column.data);
+//            insertAt(i, (row[column.name] ? row[column.name] : null), column.data);
+            column.data.insert(i, row[column.name]);
           });
 
           break;
@@ -559,7 +567,7 @@ class DataView {
       _rowIdByPosition = [];
       _rowPositionById = {};
       each((row, i) {
-        _rowIdByPosition.push(row[idAttribute]);
+        _rowIdByPosition.add(row[idAttribute]);
         _rowPositionById[row[idAttribute]] = i;
       });
     }
@@ -567,7 +575,7 @@ class DataView {
 
   /// Shorthand for `DataView.where(rows :rowFilter)`. If run with no filter
   /// will return all rows.
-  DataView rows(filter) => new DataView(this, filter: {'rows': filter});
+  DataView rows(filter) => new DataView(this, {'rows': filter});
 
   /// Sorts the dataset according to the comparator. A comparator can either be
   /// passed in as part of the options object or have been defined on the
@@ -585,7 +593,7 @@ class DataView {
     if (comparator != null) {
       this.comparator = comparator;
     } else {
-      throw new Error("Cannot sort without this.comparator.");
+      throw "Cannot sort without this.comparator.";
     }
 
     // cache rows
@@ -611,8 +619,8 @@ class DataView {
       }
     }
 
-    if (syncable && !options.silent) {
-      publish("sort");
+    if (syncable && !silent) {
+      _sortCtrl.add(null);
     }
   }
 

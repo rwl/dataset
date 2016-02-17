@@ -1,6 +1,5 @@
 import 'package:test/test.dart';
 import 'package:dataset/dataset.dart';
-import 'package:quiver/iterables.dart' show enumerate;
 
 typesTest() {
   var numbers = ['123', '0.34', '.23'];
@@ -53,16 +52,16 @@ typesTest() {
 
     test("Coerce number type", () {
       var coerced = [123, 0.34, 0.23];
-      enumerate(numbers).forEach((iv) {
-        expect(types['number'].coerce(iv.value), equals(coerced[iv.index]),
+      numbers.asMap().forEach((index, value) {
+        expect(types['number'].coerce(value), equals(coerced[index]),
             reason: "Should return true for a number");
       });
     });
 
     test("Coerce to null", () {
       var coerced = ['foo', null, double.NAN, {}];
-      enumerate(coerced).forEach((iv) {
-        expect(types['number'].coerce(coerced[iv.index]), isNull,
+      coerced.asMap().forEach((index, _) {
+        expect(types['number'].coerce(coerced[index]), isNull,
             reason: "Should return null for invalid input");
       });
     });
@@ -99,17 +98,16 @@ typesTest() {
 
     test("Coerce boolean type", () {
       var coerced = [true, false, true];
-      enumerate(booleans).forEach((iv) {
-        expect(types['boolean'].coerce(iv.value), equals(coerced[iv.index]),
+      booleans.asMap().forEach((index, value) {
+        expect(types['boolean'].coerce(value), equals(coerced[index]),
             reason: "Should return true for a boolean");
       });
     });
 
     test("Compare boolean type", () {
       var results = [0, -1];
-      enumerate([true, false]).forEach((iv) {
-        expect(
-            types['boolean'].compare(iv.value, true), equals(results[iv.index]),
+      [true, false].asMap().forEach((index, value) {
+        expect(types['boolean'].compare(value, true), equals(results[index]),
             reason: "Should return true for a boolean");
       });
     });

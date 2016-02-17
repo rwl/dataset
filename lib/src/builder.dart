@@ -29,7 +29,8 @@ class Builder {
   }
 
   /// Detects the types of all columns in a dataset.
-  static void detectColumnTypes(Dataset dataset, Map<String, List> parsedData) {
+  static void detectColumnTypes(
+      DataView dataset, Map<String, List> parsedData) {
     parsedData.forEach((columnName, data) {
       var column = dataset.column(columnName);
 
@@ -46,15 +47,16 @@ class Builder {
   /// Used by internal importers to cache the rows in quick lookup tables for
   /// any id based operations. Also used by views to cache the new rows they
   /// get as a result of whatever filter created them.
-  static void cacheRows(Dataset dataset) {
+  static void cacheRows(DataView dataset) {
     Builder.clearRowCache(dataset);
 
     // cache the row id positions in both directions.
     // iterate over the _id column and grab the row ids
-    enumerate(dataset._columns[
-        dataset._columnPositionByName[dataset.idAttribute]].data).forEach((iv) {
-      var id = iv.value;
-      dataset._rowPositionById[id] = iv.index;
+    dataset._columns[dataset._columnPositionByName[dataset.idAttribute]]
+        .data
+        .asMap()
+        .forEach((index, id) {
+      dataset._rowPositionById[id] = index;
       dataset._rowIdByPosition.add(id);
     });
 
@@ -73,15 +75,15 @@ class Builder {
   }
 
   /// Clears the row cache objects of a dataset
-  static void clearRowCache(Dataset dataset) {
+  static void clearRowCache(DataView dataset) {
     dataset._rowPositionById = {};
     dataset._rowIdByPosition = [];
   }
 
   /// Caches the column positions by name
-  static void cacheColumns(Dataset dataset) {
+  static void cacheColumns(DataView dataset) {
     dataset._columnPositionByName = {};
-    dataset._columns.forEach((column, i) {
+    dataset._columns.asMap().forEach((i, column) {
       dataset._columnPositionByName[column.name] = i;
     });
   }

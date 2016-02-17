@@ -4,7 +4,7 @@ import 'dart:math' as math;
 import 'dart:async' show Future, StreamController, Stream;
 
 import 'package:intl/intl.dart' show DateFormat;
-import 'package:quiver/iterables.dart';
+import 'package:quiver/iterables.dart' show range;
 
 part 'view.dart';
 part 'derived.dart';
@@ -353,10 +353,7 @@ class Dataset extends DataView {
     var toUpdate = [];
 //    var toRemove = [];
 
-    enumerate(data[uniqName]).forEach((iv) {
-      var key = iv.value;
-      var dataIndex = iv.index;
-
+    data[uniqName].asMap().forEach((dataIndex, key) {
       var rowIndex = uniqCol.data.indexOf(types[uniqCol.type].coerce(key));
 
       var row = {};
@@ -487,7 +484,10 @@ class Dataset extends DataView {
     }
 
     var column = new Column(col['name'], col['type'],
-        data: col['data'], id: col['id'], format: col['format']);
+        data: col['data'],
+        id: col['id'],
+        format: col['format'],
+        before: col['before']);
 
     _columns.add(column);
     _columnPositionByName[column.name] = _columns.length - 1;

@@ -2,7 +2,6 @@ import 'package:test/test.dart';
 import 'package:dataset/dataset.dart';
 import 'package:dataset/test.dart';
 import 'helpers.dart' as util;
-import 'package:quiver/iterables.dart' show enumerate;
 
 viewTest() {
   group("Columns", () {
@@ -83,62 +82,62 @@ viewTest() {
       });
     });
 
-//    test("Column before function", () {
-//      var ds = new Dataset(data: {
-//        'columns': [
-//          {
-//            'name': 'vals',
-//            'data': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-//          }
-//        ]
-//      }, columns: [
-//        {'name': 'vals', 'type': 'number', 'before': (v) => v * 10}
-//      ], strict: true);
-//
-//      ds.fetch().then((_) {
-//        expect(ds.sum(["vals"]), equals(550));
-//        expect(ds.column("vals").data,
-//            equals([10, 20, 30, 40, 50, 60, 70, 80, 90, 100]),
-//            reason: "${ds.column("vals").data}");
-//        ds.update({'_id': columns(ds)[0].data[0], 'vals': 4});
-//        expect(ds.column('vals').data[0], 40);
-//      });
-//    });
-//  });
+    test("Column before function", () {
+      var ds = new Dataset(data: {
+        'columns': [
+          {
+            'name': 'vals',
+            'data': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+          }
+        ]
+      }, columns: [
+        {'name': 'vals', 'type': 'number', 'before': (v) => v * 10}
+      ], strict: true);
 
-    /*group("Views", () {
-    test("Basic View creation", () {
-      var ds = util.baseSample();
+      ds.fetch().then((_) {
+        expect(ds.sum(["vals"]), equals(550));
+        expect(ds.column("vals").data,
+            equals([10, 20, 30, 40, 50, 60, 70, 80, 90, 100]),
+            reason: "${ds.column("vals").data}");
+        ds.update({'_id': columns(ds)[0].data[0], 'vals': 4});
+        expect(ds.column('vals').data[0], 40);
+      });
+    });
+  });
+
+  group("Views", () {
+    test("Basic View creation", () async {
+      var ds = await util.baseSample();
       var view = ds.where({});
-      enumerate(ds._columns).forEach((iv) {
-        expect(ds._columns[iv.index].data, equals(view._columns[iv.index].data),
+      columns(ds).asMap().forEach((index, value) {
+        expect(value.data, equals(columns(view)[index].data),
             reason: "data has been copied");
       });
     });
 
-    test("Basic View creation with custom idAttribute", () {
-      var ds = util.baseSampleCustomID();
+    test("Basic View creation with custom idAttribute", () async {
+      var ds = await util.baseSampleCustomID();
       var view = ds.where({});
-      enumerate(ds._columns).forEach((iv) {
-        expect(ds._columns[iv.index].data, equals(view._columns[iv.index].data),
+      columns(ds).asMap().forEach((index, value) {
+        expect(columns(ds)[index].data, equals(columns(view)[index].data),
             reason: "data has been copied");
       });
     });
 
-    test("One Row Filter View creation", () {
-      var ds = util.baseSample();
+    test("One Row Filter View creation", () async {
+      var ds = await util.baseSample();
       var view = ds.where({
-        'rows': [ds._columns[0].data[0]]
+        'rows': [columns(ds)[0].data[0]]
       });
 
-      enumerate(ds._columns).forEach((iv) {
-        expect(ds._columns[iv.index].data.slice(0, 1),
-            equals(view._columns[iv.index].data),
+      columns(ds).asMap().forEach((index, value) {
+        expect(columns(ds)[index].data.sublist(0, 1),
+            equals(columns(view)[index].data),
             reason: "data has been copied");
       });
     });
 
-    test("One Row Filter View creation with custom idAttribute", () {
+    /*test("One Row Filter View creation with custom idAttribute", () {
       var ds = util.baseSampleCustomID();
       var view = ds.where({
         'rows': [ds._columns[0].data[0]]
