@@ -137,262 +137,236 @@ viewTest() {
       });
     });
 
-    /*test("One Row Filter View creation with custom idAttribute", () {
-      var ds = util.baseSampleCustomID();
+    test("One Row Filter View creation with custom idAttribute", () async {
+      var ds = await util.baseSampleCustomID();
       var view = ds.where({
-        'rows': [ds._columns[0].data[0]]
+        'rows': [columns(ds)[0].data[0]]
       });
 
-      enumerate(ds._columns).forEach((iv) {
-        expect(ds._columns[iv.index].data.slice(0, 1),
-            equals(view._columns[iv.index].data),
+      columns(ds).asMap().forEach((index, _) {
+        expect(columns(ds)[index].data.sublist(0, 1),
+            equals(columns(view)[index].data),
             reason: "data has been copied");
       });
     });
 
-    test("One Row Filter View creation with short syntax", () {
-      var ds = util.baseSample();
-      var view = ds.where((row) => row._id == ds._columns[0].data[0]);
+    test("One Row Filter View creation with short syntax", () async {
+      var ds = await util.baseSample();
+      var view = ds.where((row) => row['_id'] == columns(ds)[0].data[0]);
 
-      enumerate(ds._columns).forEach((iv) {
-        expect(ds._columns[iv.index].data.slice(0, 1),
-            equals(view._columns[iv.index].data),
+      columns(ds).asMap().forEach((index, _) {
+        expect(columns(ds)[index].data.sublist(0, 1),
+            equals(columns(view)[index].data),
             reason: "data has been copied");
       });
     });
 
     test(
         "One Row Filter View creation with short syntax with custom idAttribute",
-        () {
-      var ds = util.baseSampleCustomID();
-      var view = ds.where((row) => row.one == ds._columns[0].data[0]);
+        () async {
+      var ds = await util.baseSampleCustomID();
+      var view = ds.where((row) => row['one'] == columns(ds)[0].data[0]);
 
-      enumerate(ds._columns).forEach((iv) {
-        expect(ds._columns[iv.index].data.slice(0, 1),
-            equals(view._columns[iv.index].data),
+      columns(ds).asMap().forEach((index, _) {
+        expect(columns(ds)[index].data.sublist(0, 1),
+            equals(columns(view)[index].data),
             reason: "data has been copied");
       });
     });
 
-    test("Two Row Filter View creation", () {
-      var ds = util.baseSample();
+    test("Two Row Filter View creation", () async {
+      var ds = await util.baseSample();
       var view = ds.where({
-        'rows': [ds._columns[0].data[0], ds._columns[0].data[1]]
+        'rows': [columns(ds)[0].data[0], columns(ds)[0].data[1]]
       });
 
-      enumerate(ds._columns).forEach((iv) {
-        expect(ds._columns[iv.index].data.slice(0, 2),
-            equals(view._columns[iv.index].data),
+      columns(ds).asMap().forEach((index, _) {
+        expect(columns(ds)[index].data.sublist(0, 2),
+            equals(columns(view)[index].data),
             reason: "data has been copied");
       });
     });
 
-    test("Two Row Filter View creation with custom idAttribute", () {
-      var ds = util.baseSampleCustomID();
+    test("Two Row Filter View creation with custom idAttribute", () async {
+      var ds = await util.baseSampleCustomID();
       var view = ds.where({
         'rows': [ds.column('one').data[0], ds.column('one').data[1]]
       });
 
-      enumerate(ds._columns).forEach((iv) {
-        expect(ds._columns[iv.index].data.slice(0, 2),
-            equals(view._columns[iv.index].data),
+      columns(ds).asMap().forEach((index, _) {
+        expect(columns(ds)[index].data.sublist(0, 2),
+            equals(columns(view)[index].data),
             reason: "data has been copied");
       });
     });
 
-    test("Function Row Filter View creation ", () {
-      var ds = util.baseSample();
-      var view = ds.where({
-        'rows': (row) {
-          return row._id == ds._columns[0].data[0];
-        }
-      });
+    test("Function Row Filter View creation ", () async {
+      var ds = await util.baseSample();
+      var view =
+          ds.where({'rows': (row) => row['_id'] == columns(ds)[0].data[0]});
 
-      enumerate(ds._columns).forEach((iv) {
-        expect(ds._columns[iv.index].data.slice(0, 1),
-            equals(view._columns[iv.index].data),
+      columns(ds).asMap().forEach((index, _) {
+        expect(columns(ds)[index].data.sublist(0, 1),
+            equals(columns(view)[index].data),
             reason: "data has been copied");
       });
     });
 
-    test("Function Row Filter View creation with custom idAttribute", () {
-      var ds = util.baseSampleCustomID();
-      var view = ds.where({
-        'rows': (row) {
-          return row.one == ds._columns[0].data[0];
-        }
-      });
+    test("Function Row Filter View creation with custom idAttribute", () async {
+      var ds = await util.baseSampleCustomID();
+      var view =
+          ds.where({'rows': (row) => row['one'] == columns(ds)[0].data[0]});
 
-      enumerate(ds._columns).forEach((iv) {
-        expect(ds._columns[iv.index].data.slice(0, 1),
-            equals(view._columns[iv.index].data),
+      columns(ds).asMap().forEach((index, _) {
+        expect(columns(ds)[index].data.sublist(0, 1),
+            equals(columns(view)[index].data),
             reason: "data has been copied");
       });
     });
 
-    test("Function Row Filter View creation with computed product", () {
-      var ds = util.baseSample();
-      var view = ds.where({
-        'rows': () {
-          return true;
-        }
-      });
+    test("Function Row Filter View creation with computed product", () async {
+      var ds = await util.baseSample();
+      var view = ds.where({'rows': (_) => true});
 
-      expect(view.mean("three"), equals(8));
-      expect(view.max("three"), equals(9));
+      expect(view.mean(["three"]), equals(8));
+      expect(view.max(["three"]), equals(9));
       expect(view.min(["three"]), equals(7));
     });
 
     test(
         "Function Row Filter View creation with computed product with custom idAttribute",
-        () {
-      var ds = util.baseSampleCustomID();
-      var view = ds.where({
-        'rows': () {
-          return true;
-        }
-      });
+        () async {
+      var ds = await util.baseSampleCustomID();
+      var view = ds.where({'rows': (_) => true});
 
-      expect(view.mean("three"), equals(8));
-      expect(view.max("three"), equals(9));
+      expect(view.mean(["three"]), equals(8));
+      expect(view.max(["three"]), equals(9));
       expect(view.min(["three"]), equals(7));
     });
 
-    test("Using string syntax for columns", () {
-      var ds = util.baseSample();
+    test("Using string syntax for columns", () async {
+      var ds = await util.baseSample();
       var view = ds.where({'columns': 'one'});
-      expect(view._columns.length, equals(2),
+      expect(columns(view).length, equals(2),
           reason: "one data columns + _id"); //one column + _id
-      enumerate(view._columns).forEach((iv) {
-        var column = iv.value, columnIndex = iv.index;
-        enumerate(column.data).forEach((iv2) {
-          var d = iv2.value, rowIndex = iv2.index;
-          expect(d, equals(ds._columns[columnIndex].data[rowIndex]),
+      columns(view).asMap().forEach((columnIndex, column) {
+        column.data.asMap().forEach((rowIndex, d) {
+          expect(d, equals(columns(ds)[columnIndex].data[rowIndex]),
               reason: "data matches parent");
         });
       });
     });
 
     test("Using string syntax for columns with custom idAttribute (the id col)",
-        () {
-      var ds = util.baseSampleCustomID();
+        () async {
+      var ds = await util.baseSampleCustomID();
       var view = ds.where({'columns': 'one'});
-      expect(view._columns.length, equals(1),
+      expect(columns(view).length, equals(1),
           reason: "one data columns + _id"); //one column + _id
-      enumerate(view._columns).forEach((iv) {
-        var column = iv.value, columnIndex = iv.index;
-        enumerate(column.data).forEach((iv2) {
-          var d = iv2.value, rowIndex = iv2.index;
-          expect(d, equals(ds._columns[columnIndex].data[rowIndex]),
+      columns(view).asMap().forEach((columnIndex, column) {
+        column.data.asMap().forEach((rowIndex, d) {
+          expect(d, equals(columns(ds)[columnIndex].data[rowIndex]),
               reason: "data matches parent");
         });
       });
     });
 
     test("Using string syntax for columns with custom idAttribute (non id col)",
-        () {
-      var ds = util.baseSampleCustomID();
+        () async {
+      var ds = await util.baseSampleCustomID();
       var view = ds.where({'columns': 'two'});
-      expect(view._columns.length, equals(2),
+      expect(columns(view).length, equals(2),
           reason: "one data columns + _id"); //one column + _id
-      enumerate(view._columns).forEach((iv) {
-        var column = iv.value, columnIndex = iv.index;
-        enumerate(column.data).forEach((iv2) {
-          var d = iv2.value, rowIndex = iv2.index;
-          expect(d, equals(ds._columns[columnIndex].data[rowIndex]),
+      columns(view).asMap().forEach((columnIndex, column) {
+        column.data.asMap().forEach((rowIndex, d) {
+          expect(d, equals(columns(ds)[columnIndex].data[rowIndex]),
               reason: "data matches parent");
         });
       });
     });
 
-    test("Columns View creation", () {
-      var ds = util.baseSample();
+    test("Columns View creation", () async {
+      var ds = await util.baseSample();
       var view = ds.where({
         'columns': ['one', 'two']
       });
 
-      expect(view._columns.length, equals(3),
+      expect(columns(view).length, equals(3),
           reason: "two data columns + _id"); //one column + _id
-      enumerate(view._columns).forEach((iv) {
-        var column = iv.value, columnIndex = iv.index;
-        enumerate(column.data).forEach((iv2) {
-          var d = iv2.value, rowIndex = iv2.index;
-          expect(d, equals(ds._columns[columnIndex].data[rowIndex]),
+      columns(view).asMap().forEach((columnIndex, column) {
+        column.data.asMap().forEach((rowIndex, d) {
+          expect(d, equals(columns(ds)[columnIndex].data[rowIndex]),
               reason: "data matches parent");
         });
       });
     });
 
-    test("Columns View creation with idAttribute", () {
-      var ds = util.baseSampleCustomID();
+    test("Columns View creation with idAttribute", () async {
+      var ds = await util.baseSampleCustomID();
       var view = ds.where({
         'columns': ['one', 'two']
       });
 
-      expect(view._columns.length, equals(2),
+      expect(columns(view).length, equals(2),
           reason: "two data columns + _id"); //one column + _id
-      enumerate(view._columns).forEach((iv) {
-        var column = iv.value, columnIndex = iv.index;
-        enumerate(column.data).forEach((iv2) {
-          var d = iv2.value, rowIndex = iv2.index;
-          expect(d, equals(ds._columns[columnIndex].data[rowIndex]),
+      columns(view).asMap().forEach((columnIndex, column) {
+        column.data.asMap().forEach((rowIndex, d) {
+          expect(d, equals(columns(ds)[columnIndex].data[rowIndex]),
               reason: "data matches parent");
         });
       });
     });
 
-    test("Select by columns and rows", () {
-      var ds = util.baseSample();
+    test("Select by columns and rows", () async {
+      var ds = await util.baseSample();
       var view = ds.where({
-        'rows': [ds._columns[0].data[0], ds._columns[0].data[1]],
+        'rows': [columns(ds)[0].data[0], columns(ds)[0].data[1]],
         'columns': ['one']
       });
 
       expect(view.length, equals(2), reason: "view has two rows");
-      expect(view._columns.length, equals(2),
+      expect(columns(view).length, equals(2),
           reason: "view has one column"); //id column + data column
-      enumerate(view._columns[1].data).forEach((iv) {
-        var d = iv.value, rowIndex = iv.index;
-        expect(d, equals(ds._columns[1].data[rowIndex]),
+      columns(view)[1].data.asMap().forEach((rowIndex, d) {
+        expect(d, equals(columns(ds)[1].data[rowIndex]),
             reason: "data matches parent");
       });
     });
 
-    test("Select by columns and rows by idAttribute (id col)", () {
-      var ds = util.baseSampleCustomID();
+    test("Select by columns and rows by idAttribute (id col)", () async {
+      var ds = await util.baseSampleCustomID();
       var view = ds.where({
-        'rows': [ds._columns[0].data[0], ds._columns[0].data[1]],
+        'rows': [columns(ds)[0].data[0], columns(ds)[0].data[1]],
         'columns': ['one']
       });
 
       expect(view.length, equals(2), reason: "view has two rows");
-      expect(view._columns.length, equals(1),
+      expect(columns(view).length, equals(1),
           reason: "view has one column"); //id column + data column
-      enumerate(view._columns[0].data).forEach((iv) {
-        var d = iv.value, rowIndex = iv.index;
-        expect(d, equals(ds._columns[0].data[rowIndex]),
+      columns(view)[0].data.asMap().forEach((rowIndex, d) {
+        expect(d, equals(columns(ds)[0].data[rowIndex]),
             reason: "data matches parent");
       });
     });
 
-    test("get all column names minus the id col", () {
-      var ds = util.baseSample();
+    test("get all column names minus the id col", () async {
+      var ds = await util.baseSample();
       expect(ds.columnNames(), equals(["one", "two", "three"]),
           reason: "All column names fetched");
     });
 
-    test("get all column names minus the id col custom idAttribute", () {
-      var ds = util.baseSampleCustomID();
+    test("get all column names minus the id col custom idAttribute", () async {
+      var ds = await util.baseSampleCustomID();
       expect(ds.columnNames(), equals(["two", "three"]),
           reason: "All column names fetched");
     });
   });
 
   group("Views :: Rows Selection", () {
-    test("each", () {
-      var ds = util.baseSample();
+    test("each", () async {
+      var ds = await util.baseSample();
       var expectedRow = {
-        '_id': ds._columns[0].data[0],
+        '_id': columns(ds)[0].data[0],
         'one': 1,
         'two': 4,
         'three': 7
@@ -405,10 +379,10 @@ viewTest() {
       });
     });
 
-    test("reversed each", /*1,*/ () {
-      var ds = util.baseSample();
+    test("reversed each", () async {
+      var ds = await util.baseSample();
       var expectedRow = {
-        '_id': ds._columns[0].data[2],
+        '_id': columns(ds)[0].data[2],
         'one': 3,
         'two': 6,
         'three': 9
@@ -423,11 +397,11 @@ viewTest() {
       });
     });
 
-    test("Get row by position", () {
-      var ds = util.baseSample();
+    test("Get row by position", () async {
+      var ds = await util.baseSample();
       var row = ds.rowByPosition(0);
       var expectedRow = {
-        '_id': ds._columns[0].data[0],
+        '_id': columns(ds)[0].data[0],
         'one': 1,
         'two': 4,
         'three': 7
@@ -435,11 +409,11 @@ viewTest() {
       expect(row, equals(expectedRow), reason: "Row by position is equal");
     });
 
-    test("Get row internal", () {
-      var ds = util.baseSample();
-      var row = ds._row(0);
+    test("Get row internal", () async {
+      var ds = await util.baseSample();
+      var row = rowInternal(ds, 0);
       var expectedRow = {
-        '_id': ds._columns[0].data[0],
+        '_id': columns(ds)[0].data[0],
         'one': 1,
         'two': 4,
         'three': 7
@@ -447,11 +421,11 @@ viewTest() {
       expect(row, equals(expectedRow), reason: "Row by internal is equal");
     });
 
-    test("Get row by _id", () {
-      var ds = util.baseSample();
-      var row = ds.rowById(ds._columns[0].data[0]);
+    test("Get row by _id", () async {
+      var ds = await util.baseSample();
+      var row = ds.rowById(columns(ds)[0].data[0]);
       var expectedRow = {
-        '_id': ds._columns[0].data[0],
+        '_id': columns(ds)[0].data[0],
         'one': 1,
         'two': 4,
         'three': 7
@@ -460,15 +434,14 @@ viewTest() {
     });
   });
 
-  group("Views :: Syncing", () {
-    test("Basic sync of dataset changes", () {
-      var ds = util.baseSyncingSample();
-      enumerate(ds._columns.sublist(1, 4)).forEach((iv) {
-        var column = iv.value, i = iv.index;
-        column.data.forEach((oldVal, rowPos) {
-          var rowId = ds._columns[0].data[rowPos];
+  /*group("Views :: Syncing", () {
+    test("Basic sync of dataset changes", () async {
+      var ds = await util.baseSyncingSample();
+      columns(ds).sublist(1, 4).asMap().forEach((i, column) {
+        column.data.asMap().forEach((rowPos, oldVal) {
+          var rowId = columns(ds)[0].data[rowPos];
           var colPos = i + 1;
-          var col = ds._columns[colPos].name;
+          var col = columns(ds)[colPos].name;
 
           // make a view
           var view = ds.where({
@@ -476,10 +449,10 @@ viewTest() {
           });
 
           // make a manual change to dataset
-          ds._columns[colPos].data[rowPos] = 100;
+          columns(ds)[colPos].data[rowPos] = 100;
 
           // create delta to propagate
-          var delta = {'_id': rowId, 'old': {}, 'changed': {}};
+          var delta = newDelta(id: rowId, old: {}, changed: {});
           delta.old[col] = oldVal;
           delta.changed[col] = 100;
 
@@ -487,23 +460,22 @@ viewTest() {
 
           // publish view sync with delta
           // view.sync(delta);
-          ds.publish("change", event);
+          changeCtrl(ds).add(event);
 
           // make sure view updated
-          expect(view._columns[colPos].data[0], equals(100),
-              reason: "view was updated to ${view._columns[colPos].data[0]}");
+          expect(columns(view)[colPos].data[0], equals(100),
+              reason: "view was updated to ${columns(view)[colPos].data[0]}");
         });
       });
     });
 
-    test("No syncing of non syncable dataset changes", () {
-      var ds = util.baseSample();
-      enumerate(ds._columns.sublist(1, 4)).forEach((iv) {
-        var column = iv.value, i = iv.index;
-        column.data.forEach((oldVal, rowPos) {
-          var rowId = ds._columns[0].data[rowPos];
+    test("No syncing of non syncable dataset changes", () async {
+      var ds = await util.baseSample();
+      columns(ds).sublist(1, 4).asMap().forEach((i, column) {
+        column.data.asMap().forEach((rowPos, oldVal) {
+          var rowId = columns(ds)[0].data[rowPos];
           var colPos = i + 1;
-          var col = ds._columns[colPos].name;
+          var col = columns(ds)[colPos].name;
 
           // make a view
           var view = ds.where({
@@ -511,109 +483,112 @@ viewTest() {
           });
 
           // make a manual change to dataset
-          oldVal = ds._columns[colPos].data[rowPos];
-          ds._columns[colPos].data[rowPos] = 100;
+          oldVal = columns(ds)[colPos].data[rowPos];
+          columns(ds)[colPos].data[rowPos] = 100;
 
           // create delta to propagate
-          var delta = {'_id': rowId, 'old': {}, 'changed': {}};
+          var delta = newDelta(id: rowId, old: {}, changed: {});
           delta.old[col] = oldVal;
           delta.changed[col] = 100;
 
+          var event = new DatasetEvent(delta);
+
           // publish view sync with delta
           // view.sync(delta);
-          if (_.isUndefined(ds.publish)) {
-            ok(true, "can't even trigger change, no publish api.");
-          }
+//          if (_.isUndefined(ds.publish)) {
+//            ok(true, "can't even trigger change, no publish api.");
+//          }
+          changeCtrl(ds).add(event);
 
           // make sure view updated
-          expect(view._columns[colPos].data[0], equals(oldVal),
+          expect(columns(view)[colPos].data[0], equals(oldVal),
               reason: "view was not updated");
         });
       });
     });
 
-    test("Sync of updates via the external API", () {
-      var ds = util.baseSyncingSample(),
+    test("Sync of updates via the external API", () async {
+      var ds = await util.baseSyncingSample(),
           view1 = ds.where({'column': 'one'}),
           view2 = ds.where({'column': 'two'}),
-          firstRowId = ds._rowIdByPosition[0],
+          firstRowId = rowIdByPosition(ds)[0],
           view3 = ds.where(firstRowId);
 
       ds.update({'_id': firstRowId, 'one': 100, 'two': 200});
       equals(view1.column('one').data[0], 100);
       equals(view2.column('two').data[0], 200);
-      equals(view3._columns[1].data[0], 100);
+      equals(columns(view3)[1].data[0], 100);
     });
 
-    test("No Sync of updates via the external API", () {
-      var ds = util.baseSample();
+    test("No Sync of updates via the external API", () async {
+      var ds = await util.baseSample();
       var view1 = ds.where({'column': 'one'});
       var view2 = ds.where({'column': 'two'});
-      var firstRowId = ds._rowIdByPosition[0];
+      var firstRowId = rowIdByPosition(ds)[0];
       var view3 = ds.where(firstRowId);
 
       var oldVals = {
         'one': view1.column('one').data[0],
         'two': view2.column('two').data[0],
-        'three': view3._columns[1].data[0]
+        'three': columns(view3)[1].data[0]
       };
-      ds.update(firstRowId, {'one': 100, 'two': 200});
+      ds.update({'_id': firstRowId, 'one': 100, 'two': 200});
 
       equals(view1.column('one').data[0], oldVals['one']);
       equals(view2.column('two').data[0], oldVals['two']);
-      equals(view3._columns[1].data[0], oldVals['three']);
+      equals(columns(view3)[1].data[0], oldVals['three']);
     });
 
-    test("Nested Syncing", () {
-      var ds = util.baseSyncingSample();
-      var colname = ds._columns[1].name;
-      var oldVal = ds._columns[1].data[0];
+    test("Nested Syncing", () async {
+      var ds = await util.baseSyncingSample();
+      var colname = columns(ds)[1].name;
+      var oldVal = columns(ds)[1].data[0];
 
       // make a view for first two rows
       var view = ds.where({
-        'rows': [ds._columns[0].data[0], ds._columns[0].data[1]]
+        'rows': [columns(ds)[0].data[0], columns(ds)[0].data[1]]
       });
 
       // make a view for first row of the first view
       var deepview = view.where({
-        'rows': [view._columns[0].data[0]]
+        'rows': [columns(view)[0].data[0]]
       });
 
       var superdeepview = deepview.where({}, sync: true);
 
       // modify a value in the dataset's first row
-      ds._columns[1].data[0] = 100;
+      columns(ds)[1].data[0] = 100;
 
       // create delta
-      var delta = {'_id': ds._columns[0].data[0], 'old': {}, 'changed': {}};
+      var delta = newDelta(id: columns(ds)[0].data[0], old: {}, changed: {});
       delta.old[colname] = oldVal;
       delta.changed[colname] = 100;
 
       var event = new DatasetEvent(delta);
 
       // trigger dataset change
-      ds.publish("change", event);
+      changeCtrl(ds).add(event);
 
       // verify both views have updated
-      expect(view._columns[1].data[0], equals(100),
+      expect(columns(view)[1].data[0], equals(100),
           reason: "first view updated");
-      expect(deepview._columns[1].data[0], equals(100),
+      expect(columns(deepview)[1].data[0], equals(100),
           reason: "second view updated");
-      expect(superdeepview._columns[1].data[0], equals(100),
+      expect(columns(superdeepview)[1].data[0], equals(100),
           reason: "third view updated");
     });
 
-    test("Basic row removal propagation", () {
-      var ds = util.baseSyncingSample();
+    test("Basic row removal propagation", () async {
+      var ds = await util.baseSyncingSample();
 
       // make a view for first two rows
       var view = ds.where({
-        'rows': [ds._columns[0].data[0], ds._columns[0].data[1]]
+        'rows': [columns(ds)[0].data[0], columns(ds)[0].data[1]]
       });
 
       // create delta for row deletion
       var delta = {
-        '_id': ds._columns[0].data[0],
+        '_id': columns(ds)[0].data[0],
         'old': ds.rowByPosition(0),
         'changed': {}
       };
@@ -622,42 +597,38 @@ viewTest() {
       var event = new DatasetEvent(delta);
 
       // delete actual row
-      ds._remove(ds._rowIdByPosition[0]);
-      ds.publish("change", event);
+      removeInternal(ds, rowIdByPosition(ds)[0]);
+      changeCtrl(ds).add(event);
 
       // verify view row was deleted as well
       expect(view.length, equals(1), reason: "view is one element shorter");
-      expect(view._columns[0].data[0], equals(ds._columns[0].data[0]),
+      expect(columns(view)[0].data[0], equals(columns(ds)[0].data[0]),
           reason: "first row was delete");
     });
 
-    test("row removal propagation via external API", () {
-      var ds = util.baseSyncingSample();
+    test("row removal propagation via external API", () async {
+      var ds = await util.baseSyncingSample();
       var view = ds.where({'column': 'one'});
 
       var l = ds.length;
-      ds.remove((row) => row.one == 1);
+      ds.remove((row) => row['one'] == 1);
       equals(ds.length, l - 1);
       expect(view.length, equals(2), reason: "row was removed from view");
       expect(ds.length, equals(2), reason: "row was removed from dataset");
     });
 
-    test("Basic row adding propagation", () {
-      var ds = util.baseSyncingSample();
+    test("Basic row adding propagation", () async {
+      var ds = await util.baseSyncingSample();
 
       // create view with a function filter
-      var view = ds.where({
-        'rows': (row) {
-          return row.three > 5;
-        }
-      });
+      var view = ds.where({'rows': (row) => row['three'] > 5});
 
       expect(view.length, equals(3), reason: "all rows initially copied");
 
       // now add another row
       var newRow = {'_id': 200, 'one': 4, 'two': 6, 'three': 20};
 
-      var delta = {'_id': 200, 'old': {}, 'changed': newRow};
+      var delta = newDelta(id: 200, old: {}, changed: newRow);
 
       // create event representing addition
       var event = new DatasetEvent(delta);
@@ -665,39 +636,37 @@ viewTest() {
       // for now, we aren't adding the actual data to the original dataset
       // just simulating that addition. Eventually when we ammend the api
       // with .add support, self can be refactored. better yet, added to.
-      ds.publish("change", event);
+      changeCtrl(ds).add(event);
 
       expect(view.length, equals(4), reason: "row was added");
       expect(view.rowByPosition(3), equals(newRow), reason: "rows are equal");
     });
 
-    test("Propagating row adding via external API", () {
-      var ds = util.baseSyncingSample();
+    test("Propagating row adding via external API", () async {
+      var ds = await util.baseSyncingSample();
       var view = ds.where({
         'column': ['one']
       });
 
-      ds.add({'one': 10, 'two': 22});
+      ds.add([
+        {'one': 10, 'two': 22}
+      ]);
       expect(view.length, equals(4), reason: "row was added to view");
     });
 
     test("Basic row adding propagation - Not added when out of filter range",
-        () {
-      var ds = util.baseSyncingSample();
+        () async {
+      var ds = await util.baseSyncingSample();
 
       // create view with a function filter
-      var view = ds.where({
-        'rows': (row) {
-          return row.three > 5;
-        }
-      });
+      var view = ds.where({'rows': (row) => row['three'] > 5});
 
       expect(view.length, equals(3), reason: "all rows initially copied");
 
       // now add another row
-      var newRow = {'_id': _.uniqueId(), 'one': 4, 'two': 6, 'three': 1};
+      var newRow = {'_id': uniqueId(), 'one': 4, 'two': 6, 'three': 1};
 
-      var delta = {'_id': newRow._id, 'old': {}, 'changed': newRow};
+      var delta = newDelta(id: newRow['_id'], old: {}, changed: newRow);
 
       // create event representing addition
       var event = new DatasetEvent(delta);
@@ -705,27 +674,27 @@ viewTest() {
       // for now, we aren't adding the actual data to the original dataset
       // just simulating that addition. Eventually when we ammend the api
       // with .add support, self can be refactored. better yet, added to.
-      ds.publish("change", event);
+      changeCtrl(ds).add(event);
 
       expect(view.length, equals(3), reason: "row was NOT added");
 
       expect(view.rowByPosition(2), equals(ds.rowByPosition(2)),
           reason: "last row in view hasn't changed.");
     });
-  });
+  });*/
 
   group("Sort", () {
-    test("Sort fail", () {
-      var ds = util.baseSample();
+    test("Sort fail", () async {
+      var ds = await util.baseSample();
       try {
         ds.sort();
         fail("error should have been thrown.");
       } catch (e) {
-        expect(e.message, equals("Cannot sort without self.comparator."));
+        expect(e, equals("Cannot sort without this.comparator."));
       }
     });
 
-    test("Basic Sort", () {
+    /*test("Basic Sort", () {
       var ds = new Dataset(data: {
         'columns': [
           {

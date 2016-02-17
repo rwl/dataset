@@ -183,8 +183,10 @@ class DataView {
     this.filter = {};
 //    this.filter['columns'] = _.bind(this._columnFilter(filter['columns']), this);
 //    this.filter['rows'] = _.bind(this._rowFilter(filter['rows']), this);
-    this.filter['columns'] = this._columnFilter(filter['columns']);
-    this.filter['rows'] = this._rowFilter(filter['rows']);
+    this.filter['columns'] =
+        this._columnFilter(filter is Map ? filter['columns'] : null);
+    this.filter['rows'] =
+        this._rowFilter(filter is Map ? filter['rows'] : null);
 
     // initialize columns.
     _columns = _selectData();
@@ -285,7 +287,15 @@ class DataView {
   /// Filtration can be applied to both rows & columns and for syncing
   /// datasets changes in the parent dataset from which the dataview was
   /// created will be reflected in the dataview.
-  DataView where(filter) => new DataView(this, filter);
+  DataView where(filter) {
+    if (filter == null) {
+      filter = {};
+    } else if (filter is Function) {
+      filter = {'rows': filter};
+    }
+
+    return new DataView(this, filter);
+  }
 
   _selectData() {
     var selectedColumns = <Column>[];
