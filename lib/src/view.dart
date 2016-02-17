@@ -745,4 +745,230 @@ class DataView {
         });
         return _mean(vals);
       });
+
+  // Derived Datasets
+
+  /// Returns a derived dataset in which the specified columns have a moving
+  /// average computed over them of a specified [size]. The [method] to apply
+  /// to all values in the window defaults to `mean`.
+  Derived movingAverage(columns, int size, [method(row)]) {
+    var d =
+        new Derived(this, method ?? _mean /*, size: size, args: arguments*/);
+
+    // copy over all columns
+    eachColumn((columnName, _, __) {
+      // don't try to compute a moving average on the id column.
+      if (columnName == idAttribute) {
+        throw "You can't compute a moving average on the id column";
+      }
+
+      d.addColumn(
+          {'name': columnName, 'type': column(columnName).type, 'data': []});
+    });
+
+    // save column positions on new dataset.
+    Builder.cacheColumns(d);
+
+    // apply with the arguments columns, size, method
+    computeMovingAverage() {
+      // normalize columns arg - if single string, to array it.
+      if (columns is String) {
+        columns = [columns];
+      }
+
+      // copy the ids
+      d.column(d.idAttribute).data = d.parent
+          .column(d.parent.idAttribute)
+          .data
+          .sublist(size - 1, d.parent.length);
+
+      // copy the columns we are NOT combining minus the sliced size.
+      d.eachColumn((columnName, column, _) {
+        if (columns.indexOf(columnName) == -1 && columnName != "_oids") {
+          // copy data
+          column.data = d.parent
+              .column(columnName)
+              .data
+              .sublist(size - 1, d.parent.length);
+        } else {
+          // compute moving average for each column and set that as the data
+          column.data =
+              _movingAvg(d.parent.column(columnName).data, size, d.method);
+        }
+      });
+
+      d.length = d.parent.length - size + 1;
+
+      // generate oids for the oid col
+      var oidcol = d.column("_oids");
+      oidcol.data = [];
+      for (var i = 0; i < d.length; i++) {
+        oidcol.data.add(
+            d.parent.column(d.parent.idAttribute).data.sublist(i, i + size));
+      }
+
+      Builder.cacheRows(d);
+
+      return d;
+    }
+
+    d._func = computeMovingAverage;
+    return d._func(); //.call(d.args);
+  }
+
+  /// Returns a new derived dataset that contains the original [byColumn] and
+  /// a count column that returns the number of occurances each unique value
+  /// in the [byColumn] contained.
+  Derived countBy(String byColumn) {
+    var d = new Derived(this, _sum /*, args: arguments*/);
+
+    var parentByColumn = this.column(byColumn);
+    //add columns
+    d.addColumn({'name': byColumn, 'type': parentByColumn.type});
+
+    d.addColumn({'name': 'count', 'type': 'number'});
+    d.addColumn({'name': '_oids', 'type': 'mixed'});
+    Builder.cacheColumns(d);
+
+    var names = d.column(byColumn).data;
+    var values = d.column('count').data;
+    var _oids = d.column('_oids').data;
+    var _ids = d.column(d.idAttribute).data;
+
+    int findIndex(List names, datum, String type) {
+      var i;
+      for (i = 0; i < names.length; i++) {
+        if (types[type].compare(names[i], datum) == 0) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    each((row, _) {
+      var index = findIndex(names, row[byColumn], parentByColumn.type);
+      if (index == -1) {
+        names.add(row[byColumn]);
+        _ids.add(uniqueId());
+        values.add(1);
+        _oids.add([row[d.parent.idAttribute]]);
+      } else {
+        values[index] += 1;
+        _oids[index].push(row[d.parent.idAttribute]);
+      }
+    });
+
+    Builder.cacheRows(d);
+    return d;
+  }
+
+  /// Group rows by values in a given column.
+  ///
+  /// The [method] in which the columns are aggregated defaults to `sum`.
+  /// Specify a normalization function to [preprocess] the byColumn values
+  /// if you need to group by some kind of derivation of those values that
+  /// are not just equality based.
+  Derived groupBy(String byColumn, List<String> columns,
+      {method(arr), preprocess(v)}) {
+    var d = new Derived(this, method ?? _sum /*args: arguments*/);
+
+//    if (preprocess != null) {
+//      d.preprocess = preprocess;
+//    }
+
+    // copy columns we want - just types and names. No data.
+    var newCols = [byColumn]..addAll(columns);
+
+    newCols.forEach((columnName) {
+      d.addColumn(
+          {'name': columnName, 'type': d.parent.column(columnName).type});
+    });
+
+    // save column positions on new dataset.
+    Builder.cacheColumns(d);
+
+    // will get called with all the arguments passed to this
+    // host function
+    computeGroupBy() {
+//      var self = this;
+
+      // clear row cache if it exists
+      Builder.clearRowCache(d);
+
+      // a cache of values
+      var categoryPositions = {};
+      var categoryCount = 0;
+      var originalByColumn = d.parent.column(byColumn);
+
+      // bin all values by their
+      for (var i = 0; i < d.parent.length; i++) {
+        var category = null;
+
+        // compute category. If a pre-processing function was specified
+        // (for binning time for example,) run that first.
+        if (preprocess != null) {
+          category = preprocess(originalByColumn.data[i]);
+        } else {
+          category = originalByColumn.data[i];
+        }
+
+        if (!categoryPositions.containsKey(category)) {
+          // this is a new value, we haven't seen yet so cache
+          // its position for lookup of row vals
+          categoryPositions[category] = categoryCount;
+
+          // add an empty array to all columns at that position to
+          // bin the values
+          columns.forEach((columnToGroup) {
+            var column = d.column(columnToGroup);
+            var idCol = d.column(d.idAttribute);
+            column.data[categoryCount] = [];
+            idCol.data[categoryCount] = uniqueId();
+          });
+
+          // add the actual bin number to the right col
+          d.column(byColumn).data[categoryCount] = category;
+
+          categoryCount++;
+        }
+
+        columns.forEach((columnToGroup) {
+          var column = d.column(columnToGroup);
+          var binPosition = categoryPositions[category];
+
+          column.data[binPosition].add(d.parent.rowByPosition(i));
+        });
+      }
+
+      // now iterate over all the bins and combine their
+      // values using the supplied method.
+      var oidcol = d._columns[d._columnPositionByName['_oids']];
+      oidcol.data = [];
+
+      columns.forEach((colName) {
+        var column = d.column(colName);
+
+        column.data.asMap().forEach((binPos, bin) {
+          if (bin is List) {
+            // save the original ids that created this group by?
+            oidcol.data[binPos] = oidcol.data[binPos] ?? [];
+            oidcol.data[binPos]
+                .add(bin.map((row) => row[/*self*/ d.parent.idAttribute]));
+            oidcol.data[binPos] = _flatten(oidcol.data[binPos]);
+
+            // compute the final value.
+            column.data[binPos] = d.method(bin.map((row) => row[colName]));
+            d.length++;
+          }
+        });
+      });
+
+      Builder.cacheRows(d);
+      return d;
+    }
+
+    // bind the recomputation function to the dataset as the context.
+    d._func = computeGroupBy;
+    return d._func(); //.call(d.args);
+  }
 }

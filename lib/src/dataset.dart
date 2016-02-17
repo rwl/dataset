@@ -34,6 +34,8 @@ num uniqueId() => _idCounter++;
 Iterable<dynamic> _flatten(Iterable<dynamic> iter) =>
     iter.expand((a) => a is Iterable ? _flatten(a) : [a]);
 
+_sum(List arr) => arr.reduce((a, b) => a + b);
+
 _mean(Iterable data) => data.reduce((a, b) => a + b) / data.length;
 
 __median(List data) {
@@ -55,11 +57,16 @@ __median(List data) {
   }
 }
 
-class ColumnDef {
-  final String name;
-  final /*DataType*/ String type;
-  final String format;
-  ColumnDef(this.name, this.type, [this.format]);
+List _movingAvg(List arr, int size, [method(Iterable data)]) {
+  method = method ?? _mean;
+  var res = [];
+  for (var i = size - 1; i <= arr.length; i++) {
+    var win = arr.sublist(i - size, i);
+    if (win.length == size) {
+      res.add(method(win));
+    }
+  }
+  return res;
 }
 
 class Dataset extends DataView {
