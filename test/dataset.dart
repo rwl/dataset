@@ -1,42 +1,44 @@
 import 'package:test/test.dart';
 import 'package:dataset/dataset.dart';
+import 'package:dataset/test.dart';
 import 'helpers.dart' as util;
 
 datasetTest() {
-  test("adding a row", () {
-    var ds = util.baseSample();
+  test("adding a row", () async {
+    var ds = await util.baseSample();
     ds.add({'one': 10});
 
-    expect(ds._columns[1].data.length, equals(4),
+    expect(columns(ds)[1].data.length, equals(4),
         reason: "row adding to 'one'");
-    expect(ds._rowIdByPosition, contains(3), reason: "rowIdByPosition updated");
+    expect(rowIdByPosition(ds)[3], isNotNull,
+        reason: "rowIdByPosition updated");
     [2, 3].forEach((i) {
-      expect(ds._columns[i].data.length, equals(4),
-          reason: "column length increased on ${ds._columns[i].name}");
-      expect(ds._columns[i].data[3], isNull,
-          reason: "null added to column ${ds._columns[i].name}");
+      expect(columns(ds)[i].data.length, equals(4),
+          reason: "column length increased on ${columns(ds)[i].name}");
+      expect(columns(ds)[i].data[3], isNull,
+          reason: "null added to column ${columns(ds)[i].name}");
     });
   });
 
-  test("adding a row with custom idAttribute", () {
-    var ds = util.baseSampleCustomID();
+  test("adding a row with custom idAttribute", () async {
+    var ds = await util.baseSampleCustomID();
     ds.add({'one': 100});
 
-    expect(ds._columns[1].data.length, equals(4),
+    expect(columns(ds)[1].data.length, equals(4),
         reason: "row adding to 'one'");
-    expect(ds._rowIdByPosition, contains(3), reason: "rowIdByPosition updated");
+    expect(rowIdByPosition(ds), contains(3), reason: "rowIdByPosition updated");
     [1, 2].forEach((i) {
-      expect(ds._columns[i].data.length, equals(4),
-          reason: "column length increased on ${ds._columns[i].name}");
-      expect(ds._columns[i].data[3], isNull,
-          reason: "null added to column ${ds._columns[i].name}");
+      expect(columns(ds)[i].data.length, equals(4),
+          reason: "column length increased on ${columns(ds)[i].name}");
+      expect(columns(ds)[i].data[3], isNull,
+          reason: "null added to column ${columns(ds)[i].name}");
     });
 
     expect(ds.rowById(100), equals({'one': 100, 'two': null, 'three': null}));
   });
 
-  test("adding a row with wrong types", () {
-    var ds = util.baseSample();
+  test("adding a row with wrong types", () async {
+    var ds = await util.baseSample();
     expect(() {
       ds.add({'one': 'a', 'two': 5, 'three': []});
       ds.add({'two': 5, 'three': []});
@@ -45,107 +47,107 @@ datasetTest() {
     }, throws);
 
     ds.add({'one': 5});
-    expect(ds._columns[1].data.length, equals(4),
+    expect(columns(ds)[1].data.length, equals(4),
         reason: "row adding to 'one'");
-    expect(ds._columns[2].data.length, equals(4),
+    expect(columns(ds)[2].data.length, equals(4),
         reason: "row adding to 'two'");
-    expect(ds._columns[3].data.length, equals(4),
+    expect(columns(ds)[3].data.length, equals(4),
         reason: "row adding to 'three'");
   });
 
-  test("removing a row with a function", () {
-    var ds = util.baseSample();
-    var firstRowId = ds._rowIdByPosition[0];
-    ds.remove((row) => row.one == 1);
-    expect(ds._rowPositionById, isNot(contains(firstRowId)));
-    expect(ds._rowIdByPosition[0], isNot(equals(firstRowId)));
+  test("removing a row with a function", () async {
+    var ds = await util.baseSample();
+    var firstRowId = rowIdByPosition(ds)[0];
+    ds.remove((row) => row['one'] == 1);
+    expect(rowPositionById(ds), isNot(contains(firstRowId)));
+    expect(rowIdByPosition(ds)[0], isNot(equals(firstRowId)));
     expect(ds.length, equals(2));
   });
 
-  test("removing a row with an id", () {
-    var ds = util.baseSample();
-    var firstRowId = ds._rowIdByPosition[0];
+  test("removing a row with an id", () async {
+    var ds = await util.baseSample();
+    var firstRowId = rowIdByPosition(ds)[0];
     ds.remove(firstRowId);
-    expect(ds._rowPositionById, isNot(contains(firstRowId)));
-    expect(ds._rowIdByPosition[0], isNot(equals(firstRowId)));
+    expect(rowPositionById(ds), isNot(contains(firstRowId)));
+    expect(rowIdByPosition(ds)[0], isNot(equals(firstRowId)));
     expect(ds.length, equals(2));
   });
 
-  test("removing a row with an id with custom idAttribute", () {
-    var ds = util.baseSampleCustomID();
-    var firstRowId = ds.rowByPosition(0).one;
+  test("removing a row with an id with custom idAttribute", () async {
+    var ds = await util.baseSampleCustomID();
+    var firstRowId = ds.rowByPosition(0)['one'];
 
     ds.remove(firstRowId);
-    expect(ds._rowPositionById, isNot(contains(firstRowId)));
-    expect(ds._rowIdByPosition[0], isNot(equals(firstRowId)));
+    expect(rowPositionById(ds), isNot(contains(firstRowId)));
+    expect(rowIdByPosition(ds)[0], isNot(equals(firstRowId)));
     expect(ds.length, equals(2));
   });
 
-  test("updating a row with an incorrect type", () {
-    var ds = util.baseSample();
+  test("updating a row with an incorrect type", () async {
+    var ds = await util.baseSample();
     ['a', []].forEach((value) {
       expect(() {
-        ds.update({'_id': ds._rowIdByPosition[0], 'one': value});
+        ds.update({'_id': rowIdByPosition(ds)[0], 'one': value});
       }, throws);
     });
   });
 
-  test("updating a row", () {
-    var ds = util.baseSample();
-    ds._columns[1].type = 'mixed';
-    var firstRowId = ds._rowIdByPosition[0];
+  test("updating a row", () async {
+    var ds = await util.baseSample();
+    columns(ds)[1].type = 'mixed';
+    var firstRowId = rowIdByPosition(ds)[0];
     [100, 'a', null, []].forEach((value) {
       ds.update({'_id': firstRowId, 'one': value});
-      expect(ds._columns[1].data[0], equals(value),
+      expect(columns(ds)[1].data[0], equals(value),
           reason: "value updated to $value");
     });
   });
 
-  test("updating multiple rows", () {
-    var ds = util.baseSample();
-    ds._columns[1].type = 'mixed';
-    var firstRowId = ds._rowIdByPosition[0];
-    var secondRowId = ds._rowIdByPosition[1];
+  test("updating multiple rows", () async {
+    var ds = await util.baseSample();
+    columns(ds)[1].type = 'mixed';
+    var firstRowId = rowIdByPosition(ds)[0];
+    var secondRowId = rowIdByPosition(ds)[1];
     [100, 'a', null, []].forEach((value) {
-      ds.update([
+      ds.updateAll([
         {'_id': firstRowId, 'one': value},
         {'_id': secondRowId, 'one': value}
       ]);
-      expect(ds._columns[1].data[0], equals(value),
+      expect(columns(ds)[1].data[0], equals(value),
           reason: "value updated to $value");
-      expect(ds._columns[1].data[1], equals(value),
+      expect(columns(ds)[1].data[1], equals(value),
           reason: "value updated to $value");
     });
   });
 
-  test("updating a row with custom idAttribute (non id column)", () {
-    var ds = util.baseSampleCustomID();
-    ds._columns[1].type = 'mixed';
-    var firstRowId = ds.rowByPosition(0).one;
+  test("updating a row with custom idAttribute (non id column)", () async {
+    var ds = await util.baseSampleCustomID();
+    columns(ds)[1].type = 'mixed';
+    var firstRowId = ds.rowByPosition(0)['one'];
 
     [100, 'a', null, []].forEach((value) {
       ds.update({'one': firstRowId, 'two': value});
-      expect(ds._columns[1].data[0], equals(value),
+      expect(columns(ds)[1].data[0], equals(value),
           reason: "value updated to $value");
     });
   });
 
-  test("updating a row with a custom idAttribute (updating id col)", /*1,*/ () {
-    var ds = util.baseSampleCustomID();
+  test("updating a row with a custom idAttribute (updating id col)", () async {
+    var ds = await util.baseSampleCustomID();
 
     expect(() {
       ds.update({'one': 99});
     }, throws, reason: "You can't update the id column");
   });
 
-  test("#105 - updating a row with a function", () {
-    var ds = util.baseSample();
-    ds.update((row) {
+  test("#105 - updating a row with a function", () async {
+    var ds = await util.baseSample();
+    ds.updateWhere((row) {
       return {
-        'one': row.one % 2 == 0 ? 100 : 0,
-        'two': row.two % 2 == 0 ? 100 : 0,
-        'three': row.three % 2 == 0 ? 100 : 0,
-        '_id': row._id
+        'one': row['one'] % 2 == 0 ? 100 : 0,
+        'two': row['two'] % 2 == 0 ? 100 : 0,
+        'three': row['three'] % 2 == 0 ? 100 : 0,
+        '_id': row['_id']
       };
     });
 
@@ -156,17 +158,17 @@ datasetTest() {
 
   test(
       "#105 - updating a row with a function skips a row when false is returned",
-      () {
-    var ds = util.baseSample();
-    ds.update((row) {
-      if (row.one == 1) {
-        return false;
+      () async {
+    var ds = await util.baseSample();
+    ds.updateWhere((row) {
+      if (row['one'] == 1) {
+        return null;
       }
       return {
-        'one': row.one % 2 == 0 ? 100 : 0,
-        'two': row.two % 2 == 0 ? 100 : 0,
-        'three': row.three % 2 == 0 ? 100 : 0,
-        '_id': row._id
+        'one': row['one'] % 2 == 0 ? 100 : 0,
+        'two': row['two'] % 2 == 0 ? 100 : 0,
+        'three': row['three'] % 2 == 0 ? 100 : 0,
+        '_id': row['_id']
       };
     });
 
@@ -195,7 +197,7 @@ datasetTest() {
       });
     });
 
-    test("Add a computed column with a bogus type - should fail", /*3,*/ () {
+    test("Add a computed column with a bogus type - should fail", () {
       var ds = new Dataset(data: {
         'columns': [
           {'name': "one", 'data': []},
@@ -216,7 +218,7 @@ datasetTest() {
       });
     });
 
-    test("Add a computed column with a name that already exists", /*3,*/ () {
+    test("Add a computed column with a name that already exists", () {
       var ds = new Dataset(data: {
         'columns': [
           {'name': "one", 'data': []},
@@ -237,7 +239,7 @@ datasetTest() {
       });
     });
 
-    test("Add computed column to dataset with values", /*3,*/ () {
+    test("Add computed column to dataset with values", () {
       var ds = new Dataset(data: {
         'columns': [
           {
@@ -263,7 +265,7 @@ datasetTest() {
       });
     });
 
-    test("Add row to a dataset with one computed column", /*5,*/ () {
+    test("Add row to a dataset with one computed column", () {
       var ds = new Dataset(data: {
         'columns': [
           {
@@ -297,7 +299,7 @@ datasetTest() {
 
     test(
         "Add a row to a dataset with multiple computed columns one of which depends on a computed column",
-        /*8,*/ () {
+        () {
       var ds = new Dataset(data: {
         'columns': [
           {
@@ -336,7 +338,7 @@ datasetTest() {
       });
     });
 
-    test("Can't add a row with a computed column value.", /*9,*/ () {
+    test("Can't add a row with a computed column value.", () {
       var ds = new Dataset(data: {
         'columns': [
           {
@@ -376,7 +378,7 @@ datasetTest() {
       });
     });
 
-    test("Update a row in a dataset with a single computed column", /*3,*/ () {
+    test("Update a row in a dataset with a single computed column", () {
       var ds = new Dataset(data: {
         'columns': [
           {
@@ -400,7 +402,7 @@ datasetTest() {
           return row['one'] + row['two'] + row['three'];
         });
 
-        var firstId = ds.rowByPosition(0)._id;
+        var firstId = ds.rowByPosition(0)['_id'];
 
         ds.update({'_id': firstId, 'one': 100});
 
@@ -409,8 +411,7 @@ datasetTest() {
       });
     });
 
-    test(
-        "remove row and make sure computed column row is removed too", /*2,*/ () {
+    test("remove row and make sure computed column row is removed too", () {
       var ds = new Dataset(data: {
         'columns': [
           {
@@ -431,7 +432,7 @@ datasetTest() {
           return row['one'] + row['two'];
         });
 
-        var firstId = ds.rowByPosition(0)._id;
+        var firstId = ds.rowByPosition(0)['_id'];
         ds.remove(firstId);
 
         expect(newcol.data, equals([22, 33]), reason: "${newcol.data}");
@@ -440,7 +441,7 @@ datasetTest() {
 
     test(
         "check that syncable datasets notify properly of computed columns too during addition",
-        /*2,*/ () {
+        () {
       var ds = new Dataset(data: {
         'columns': [
           {
@@ -461,11 +462,11 @@ datasetTest() {
           return row['one'] + row['two'];
         });
 
-        stop();
-        ds.subscribe("add", (event) {
-          expect(event.deltas[0].changed.three, equals(44));
-          start();
-        });
+        //stop();
+        ds.onAdd.listen(expectAsync((DatasetEvent event) {
+          expect(event.deltas[0].changed['three'], equals(44));
+          //start();
+        }, count: 1));
 
         ds.add({'one': 4, 'two': 40});
       });
@@ -473,7 +474,7 @@ datasetTest() {
 
     test(
         "check that syncable datasets notify properly of computed columns too during addition",
-        /*2,*/ () {
+        () {
       var ds = new Dataset(data: {
         'columns': [
           {
@@ -494,13 +495,13 @@ datasetTest() {
           return row['one'] + row['two'];
         });
 
-        stop();
-        ds.subscribe("change", (event) {
-          expect(event.deltas[0].changed.three, equals(110));
-          start();
-        });
+        //stop();
+        ds.onChange.listen(expectAsync((event) {
+          expect(event.deltas[0].changed['three'], equals(110));
+          //start();
+        }, count: 1));
 
-        ds.update({'_id': ds.rowByPosition(0)._id, 'one': 100});
+        ds.update({'_id': ds.rowByPosition(0)['_id'], 'one': 100});
       });
     });
   });
@@ -526,3 +527,5 @@ datasetTest() {
     });
   });
 }
+
+main() => datasetTest();

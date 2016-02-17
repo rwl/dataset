@@ -694,7 +694,7 @@ viewTest() {
       }
     });
 
-    /*test("Basic Sort", () {
+    test("Basic Sort", () {
       var ds = new Dataset(data: {
         'columns': [
           {
@@ -713,10 +713,10 @@ viewTest() {
       }, strict: true);
 
       ds.comparator = (r1, r2) {
-        if (r1.one > r2.one) {
+        if (r1['one'] > r2['one']) {
           return 1;
         }
-        if (r1.one < r2.one) {
+        if (r1['one'] < r2['one']) {
           return -1;
         }
         return 0;
@@ -725,12 +725,12 @@ viewTest() {
       ds.fetch().then((_) {
         ds.sort();
 
-        expect(ds._columns[1].data, equals([2, 3, 3, 4, 10, 14]),
-            reason: "${ds._columns[1].data}");
-        expect(ds._columns[2].data, equals([5, 6, 1, 1, 4, 1]),
-            reason: "${ds._columns[2].data}");
-        expect(ds._columns[3].data, equals([8, 9, 1, 1, 7, 1]),
-            reason: "${ds._columns[3].data}");
+        expect(columns(ds)[1].data, equals([2, 3, 3, 4, 10, 14]),
+            reason: "${columns(ds)[1].data}");
+        expect(columns(ds)[2].data, equals([5, 6, 1, 1, 4, 1]),
+            reason: "${columns(ds)[2].data}");
+        expect(columns(ds)[3].data, equals([8, 9, 1, 1, 7, 1]),
+            reason: "${columns(ds)[3].data}");
       });
     });
 
@@ -753,22 +753,22 @@ viewTest() {
       }, strict: true);
 
       ds.fetch().then((_) {
-        ds.sort((r1, r2) {
-          if (r1.one > r2.one) {
+        ds.sort((Map r1, Map r2) {
+          if (r1['one'] > r2['one']) {
             return 1;
           }
-          if (r1.one < r2.one) {
+          if (r1['one'] < r2['one']) {
             return -1;
           }
           return 0;
         }, true);
 
-        expect(ds._columns[1].data, equals([2, 3, 3, 4, 10, 14]),
-            reason: "${ds._columns[1].data}");
-        expect(ds._columns[2].data, equals([5, 6, 1, 1, 4, 1]),
-            reason: "${ds._columns[2].data}");
-        expect(ds._columns[3].data, equals([8, 9, 1, 1, 7, 1]),
-            reason: "${ds._columns[3].data}");
+        expect(columns(ds)[1].data, equals([2, 3, 3, 4, 10, 14]),
+            reason: "${columns(ds)[1].data}");
+        expect(columns(ds)[2].data, equals([5, 6, 1, 1, 4, 1]),
+            reason: "${columns(ds)[2].data}");
+        expect(columns(ds)[3].data, equals([8, 9, 1, 1, 7, 1]),
+            reason: "${columns(ds)[3].data}");
       });
     });
 
@@ -791,22 +791,22 @@ viewTest() {
       }, strict: true);
 
       ds.fetch().then((_) {
-        ds.sort((r1, r2) {
-          if (r1.one > r2.one) {
+        ds.sort((Map r1, Map r2) {
+          if (r1['one'] > r2['one']) {
             return 1;
           }
-          if (r1.one < r2.one) {
+          if (r1['one'] < r2['one']) {
             return -1;
           }
           return 0;
         });
 
-        expect(ds._columns[1].data, equals([2, 3, 3, 4, 10, 14]),
-            reason: "${ds._columns[1].data}");
-        expect(ds._columns[2].data, equals([5, 6, 1, 1, 4, 1]),
-            reason: "${ds._columns[2].data}");
-        expect(ds._columns[3].data, equals([8, 9, 1, 1, 7, 1]),
-            reason: "${ds._columns[3].data}");
+        expect(columns(ds)[1].data, equals([2, 3, 3, 4, 10, 14]),
+            reason: "${columns(ds)[1].data}");
+        expect(columns(ds)[2].data, equals([5, 6, 1, 1, 4, 1]),
+            reason: "${columns(ds)[2].data}");
+        expect(columns(ds)[3].data, equals([8, 9, 1, 1, 7, 1]),
+            reason: "${columns(ds)[3].data}");
       });
     });
 
@@ -828,11 +828,11 @@ viewTest() {
         ]
       }, strict: true);
 
-      ds.comparator = (r1, r2) {
-        if (r1.one > r2.one) {
+      ds.comparator = (Map r1, Map r2) {
+        if (r1['one'] > r2['one']) {
           return -1;
         }
-        if (r1.one < r2.one) {
+        if (r1['one'] < r2['one']) {
           return 1;
         }
         return 0;
@@ -840,12 +840,12 @@ viewTest() {
       ds.fetch().then((_) {
         ds.sort();
 
-        expect(ds._columns[1].data, equals([2, 3, 4, 6, 10, 14].reversed),
-            reason: "${ds._columns[1].data}");
-        expect(ds._columns[2].data, equals([5, 1, 1, 6, 4, 1].reversed),
-            reason: "${ds._columns[2].data}");
-        expect(ds._columns[3].data, equals([8, 1, 1, 9, 7, 1].reversed),
-            reason: "${ds._columns[3].data}");
+        expect(columns(ds)[1].data, equals([2, 3, 4, 6, 10, 14].reversed),
+            reason: "${columns(ds)[1].data}");
+        expect(columns(ds)[2].data, equals([5, 1, 1, 6, 4, 1].reversed),
+            reason: "${columns(ds)[2].data}");
+        expect(columns(ds)[3].data, equals([8, 1, 1, 9, 7, 1].reversed),
+            reason: "${columns(ds)[3].data}");
       });
     });
 
@@ -865,22 +865,22 @@ viewTest() {
             'data': [7, 8, 9, 1, 1, 1]
           }
         ]
-      }, comparator: (r1, r2) {
-        if (r1.one > r2.one) {
+      }, comparator: (Map r1, Map r2) {
+        if (r1['one'] > r2['one']) {
           return -1;
         }
-        if (r1.one < r2.one) {
+        if (r1['one'] < r2['one']) {
           return 1;
         }
         return 0;
       }, strict: true);
       ds.fetch().then((_) {
-        expect(ds._columns[1].data, equals([2, 3, 4, 6, 10, 14].reversed),
-            reason: "${ds._columns[1].data}");
-        expect(ds._columns[2].data, equals([5, 1, 1, 6, 4, 1].reversed),
-            reason: "${ds._columns[2].data}");
-        expect(ds._columns[3].data, equals([8, 1, 1, 9, 7, 1].reversed),
-            reason: "${ds._columns[3].data}");
+        expect(columns(ds)[1].data, equals([2, 3, 4, 6, 10, 14].reversed),
+            reason: "${columns(ds)[1].data}");
+        expect(columns(ds)[2].data, equals([5, 1, 1, 6, 4, 1].reversed),
+            reason: "${columns(ds)[2].data}");
+        expect(columns(ds)[3].data, equals([8, 1, 1, 9, 7, 1].reversed),
+            reason: "${columns(ds)[3].data}");
       });
     });
 
@@ -900,11 +900,11 @@ viewTest() {
             'data': [7, 8, 9, 1, 1, 1]
           }
         ]
-      }, comparator: (r1, r2) {
-        if (r1.one > r2.one) {
+      }, comparator: (Map r1, Map r2) {
+        if (r1['one'] > r2['one']) {
           return 1;
         }
-        if (r1.one < r2.one) {
+        if (r1['one'] < r2['one']) {
           return -1;
         }
         return 0;
@@ -913,9 +913,9 @@ viewTest() {
         var l = ds.length;
         ds.add({'one': 5, 'two': 5, 'three': 5});
         equals(ds.length, l + 1);
-        expect(ds._columns[1].data, equals([2, 3, 4, 5, 6, 10, 14]));
-        expect(ds._columns[2].data, equals([5, 1, 1, 5, 6, 4, 1]));
-        expect(ds._columns[3].data, equals([8, 1, 1, 5, 9, 7, 1]));
+        expect(columns(ds)[1].data, equals([2, 3, 4, 5, 6, 10, 14]));
+        expect(columns(ds)[2].data, equals([5, 1, 1, 5, 6, 4, 1]));
+        expect(columns(ds)[3].data, equals([8, 1, 1, 5, 9, 7, 1]));
       });
     });
 
@@ -935,11 +935,11 @@ viewTest() {
             'data': [7, 8, 9, 1, 1, 1]
           }
         ]
-      }, comparator: (r1, r2) {
-        if (r1.one > r2.one) {
+      }, comparator: (Map r1, Map r2) {
+        if (r1['one'] > r2['one']) {
           return -1;
         }
-        if (r1.one < r2.one) {
+        if (r1['one'] < r2['one']) {
           return 1;
         }
         return 0;
@@ -948,9 +948,9 @@ viewTest() {
       ds.fetch().then((_) {
         ds.add({'one': 5, 'two': 5, 'three': 5});
 
-        expect(ds._columns[1].data, equals([2, 3, 4, 5, 6, 10, 14].reversed));
-        expect(ds._columns[2].data, equals([5, 1, 1, 5, 6, 4, 1].reversed));
-        expect(ds._columns[3].data, equals([8, 1, 1, 5, 9, 7, 1].reversed));
+        expect(columns(ds)[1].data, equals([2, 3, 4, 5, 6, 10, 14].reversed));
+        expect(columns(ds)[2].data, equals([5, 1, 1, 5, 6, 4, 1].reversed));
+        expect(columns(ds)[3].data, equals([8, 1, 1, 5, 9, 7, 1].reversed));
       });
     });
   });
@@ -980,7 +980,7 @@ viewTest() {
         expect(
             j[0],
             equals({
-              '_id': ds._columns[0].data[0],
+              '_id': columns(ds)[0].data[0],
               'one': 10,
               'two': 4,
               'three': 7
@@ -989,7 +989,7 @@ viewTest() {
         expect(
             j[1],
             equals({
-              '_id': ds._columns[0].data[1],
+              '_id': columns(ds)[0].data[1],
               'one': 2,
               'two': 5,
               'three': 8
@@ -998,7 +998,7 @@ viewTest() {
         expect(
             j[2],
             equals({
-              '_id': ds._columns[0].data[2],
+              '_id': columns(ds)[0].data[2],
               'one': 6,
               'two': 6,
               'three': 9
@@ -1007,7 +1007,7 @@ viewTest() {
         expect(
             j[3],
             equals({
-              '_id': ds._columns[0].data[3],
+              '_id': columns(ds)[0].data[3],
               'one': 14,
               'two': 1,
               'three': 1
@@ -1016,7 +1016,7 @@ viewTest() {
         expect(
             j[4],
             equals({
-              '_id': ds._columns[0].data[4],
+              '_id': columns(ds)[0].data[4],
               'one': 3,
               'two': 1,
               'three': 1
@@ -1025,14 +1025,14 @@ viewTest() {
         expect(
             j[5],
             equals({
-              '_id': ds._columns[0].data[5],
+              '_id': columns(ds)[0].data[5],
               'one': 4,
               'two': 1,
               'three': 1
             }),
             reason: "${j[5]}");
       });
-    });*/
+    });
   });
 }
 

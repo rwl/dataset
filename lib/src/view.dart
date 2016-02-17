@@ -55,11 +55,16 @@ class Column {
   /// If this is a computed column, it calculates the value for this column
   /// and adds it to the data. Specify the [row] from which column is computed
   /// and the [index] at which this value will get added.
-  dynamic compute(int row, [int index]) {
+  dynamic compute(row, [int index]) {
     if (func != null) {
       var val = func(row);
       if (index != null) {
-        data[index] = val;
+        try {
+          RangeError.checkValidIndex(index, data);
+          data[index] = val;
+        } on RangeError catch (_) {
+          data.add(val);
+        }
       } else {
         data.add(val);
       }
@@ -131,24 +136,15 @@ class DataView {
   Map<String, int> _columnPositionByName;
   List _rowIdByPosition;
   int length;
-  Function comparator;
+  Comparator<Map> comparator;
   List<Column> _computedColumns;
 
-  StreamController<DatasetEvent> _addCtrl = new StreamController.broadcast();
-  StreamController<DatasetEvent> _changeCtrl = new StreamController.broadcast();
-  StreamController<DatasetEvent> _updateCtrl = new StreamController.broadcast();
-  StreamController<DatasetEvent> _deleteCtrl = new StreamController.broadcast();
-  StreamController<DatasetEvent> _removeCtrl = new StreamController.broadcast();
-  StreamController _resetCtrl = new StreamController.broadcast();
-  StreamController _sortCtrl = new StreamController.broadcast();
-
-  Stream<DatasetEvent> get onAdd => _addCtrl.stream;
-  Stream<DatasetEvent> get onChange => _changeCtrl.stream;
-  Stream<DatasetEvent> get onUpdate => _updateCtrl.stream;
-  Stream<DatasetEvent> get onDelete => _deleteCtrl.stream;
-  Stream<DatasetEvent> get onRemove => _removeCtrl.stream;
-  Stream get onReset => _resetCtrl.stream;
-  Stream get onSort => _sortCtrl.stream;
+  StreamController<DatasetEvent> _addCtrl,
+      _changeCtrl,
+      _updateCtrl,
+      _deleteCtrl,
+      _removeCtrl;
+  StreamController _resetCtrl, _sortCtrl;
 
   DataView._()
       : parent = null,
@@ -172,6 +168,7 @@ class DataView {
     // required methoMiso and mark this as a syncable dataset.
     if (parent.syncable == true) {
 //      _.extend(this, Miso.Events);
+      _setupSync();
       syncable = true;
     } else {
       syncable = false;
@@ -200,16 +197,42 @@ class DataView {
     }
   }
 
+  void _setupSync() {
+    _addCtrl = new StreamController.broadcast();
+    _changeCtrl = new StreamController.broadcast();
+    _updateCtrl = new StreamController.broadcast();
+    _deleteCtrl = new StreamController.broadcast();
+    _removeCtrl = new StreamController.broadcast();
+    _resetCtrl = new StreamController.broadcast();
+    _sortCtrl = new StreamController.broadcast();
+  }
+
+  /// Fired when adding a row to the dataset by calling [add].
+  Stream<DatasetEvent> get onAdd => _addCtrl?.stream;
+
+  /// Fired when calling [add], [remove] or [update].
+  Stream<DatasetEvent> get onChange => _changeCtrl?.stream;
+
+  /// Fired when updating a row in the dataset by calling [update].
+  Stream<DatasetEvent> get onUpdate => _updateCtrl?.stream;
+  Stream<DatasetEvent> get onDelete => _deleteCtrl?.stream;
+
+  /// Fired when removing a row from the dataset by calling [remove].
+  Stream<DatasetEvent> get onRemove => _removeCtrl?.stream;
+
+  /// Fired when a dataset has been reset.
+  Stream get onReset => _resetCtrl?.stream;
+
+  /// Fired when a dataset has been sorted.
+  Stream get onSort => _sortCtrl?.stream;
+
   /// Syncs up the current view based on a passed delta.
   _sync(DatasetEvent event) {
     var deltas = event.deltas;
     String eventType = null;
 
     // iterate over deltas and update rows that are affected.
-    enumerate(deltas).forEach((iv) {
-      Delta d = iv.value;
-      var deltaIndex = iv.index;
-
+    deltas.asMap().forEach((deltaIndex, d) {
       // find row position based on delta _id
       var rowPos = this._rowPositionById[d.id];
 
@@ -458,7 +481,7 @@ class DataView {
   /// Fetches a row object at a specified position. Note that the returned row
   /// object is NOT a direct reference to the data and thus any changes to it
   /// will not alter the original data.
-  rowByPosition(int i) => _row(i);
+  Map rowByPosition(int i) => _row(i);
 
   /// Fetches a row object with a specific _id. Note that the returned row
   /// object is NOT a direct reference to the data and thus any changes to it
@@ -468,7 +491,12 @@ class DataView {
   Map _row(int pos) {
     var row = {};
     _columns.forEach((column) {
-      row[column.name] = column.data[pos];
+      try {
+        RangeError.checkValidIndex(pos, column.data);
+        row[column.name] = column.data[pos];
+      } on RangeError catch (_) {
+//        row[column.name] = null;
+      }
     });
     return row;
   }
@@ -598,32 +626,32 @@ class DataView {
   ///     Copyright (c) 2009, Jon Bomgardner.
   ///     This file is licensed under an MIT style license
   void sort([comparator(a, b), bool silent = false]) {
-    var cachedRows = [];
+    var cachedRows = new List(length);
 
     if (comparator != null) {
       this.comparator = comparator;
-    } else {
+    }
+    if (this.comparator == null) {
       throw "Cannot sort without this.comparator.";
     }
 
     // cache rows
-    var i, j, row;
-    for (i = 0; i < length; i++) {
+    for (var i = 0; i < length; i++) {
       cachedRows[i] = _row(i);
     }
 
     cachedRows.sort(this.comparator);
 
     // iterate through cached rows, overwriting data in columns
-    i = cachedRows.length;
-    while (i--) {
-      row = cachedRows[i];
+    var i = cachedRows.length;
+    while (i-- != 0) {
+      var row = cachedRows[i];
 
       _rowIdByPosition[i] = row[idAttribute];
       _rowPositionById[row[idAttribute]] = i;
 
-      j = _columns.length;
-      while (j--) {
+      var j = _columns.length;
+      while (j-- != 0) {
         var col = _columns[j];
         col.data[i] = row[col.name];
       }

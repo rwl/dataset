@@ -116,7 +116,7 @@ class Dataset extends DataView {
 
       /// A function to sort the data by. It will be sorted on fetch and on
       /// any successive addition.
-      Function comparator,
+      Comparator<Map> comparator,
 
       /// Custom importer (passes through auto detection based
       /// on parameters).
@@ -176,6 +176,7 @@ class Dataset extends DataView {
     // required methods and mark this as a syncable dataset.
     if (sync == true) {
 //      _.extend(this, Miso.Events);
+      _setupSync();
       syncable = true;
     } else {
       syncable = false;
@@ -371,7 +372,7 @@ class Dataset extends DataView {
       }
     });
     if (toAdd.length > 0) {
-      add(toAdd);
+      addAll(toAdd);
     }
   }
 
@@ -392,7 +393,7 @@ class Dataset extends DataView {
       rows.add(row);
     }
 
-    add(rows);
+    addAll(rows);
   }
 //    }
 
@@ -541,12 +542,12 @@ class Dataset extends DataView {
 
   /// Add a row to the dataset. Triggers `add` and `change` events on a
   /// syncable dataset unless [silent] is true.
-  void add(List<Map> rows, [bool silent = false]) {
-//    if (!_.isArray(rows)) {
-//      rows = [rows];
-//    }
+  void add(Map row, [bool silent = false]) {
+    addAll([row], silent);
+  }
 
-    var deltas = [];
+  void addAll(List<Map> rows, [bool silent = false]) {
+    var deltas = <Delta>[];
 
     rows.forEach((row) {
       if (!row.containsKey(idAttribute)) {
@@ -557,7 +558,7 @@ class Dataset extends DataView {
 
       // store all deltas for a single fire event.
       if (syncable && !silent) {
-        deltas.add({'changed': row});
+        deltas.add(new Delta._(changed: row));
       }
     });
 
@@ -686,6 +687,18 @@ class Dataset extends DataView {
   void update(Map rows, [bool silent = false]) {
 //    var rows = (rowsOrFunction is List) ? rowsOrFunction : [rowsOrFunction];
     var deltas = _arrayUpdate([rows]);
+
+    //computer column updates
+    //update triggers
+    if (syncable && !silent) {
+      var ev = new DatasetEvent(deltas, this);
+      _updateCtrl.add(ev);
+      _changeCtrl.add(ev);
+    }
+  }
+
+  void updateAll(List<Map> rows, [bool silent = false]) {
+    var deltas = _arrayUpdate(rows);
 
     //computer column updates
     //update triggers

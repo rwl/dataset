@@ -4,6 +4,8 @@ List<Column> columns(DataView dv) => dv._columns;
 
 List rowIdByPosition(DataView dv) => dv._rowIdByPosition;
 
+Map rowPositionById(DataView dv) => dv._rowPositionById;
+
 Map rowInternal(DataView dv, int pos) => dv._row(pos);
 
 void removeInternal(DataView dv, num rowId) => dv._remove(rowId);

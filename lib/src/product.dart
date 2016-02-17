@@ -6,9 +6,7 @@ class Product {
   Function numeric;
   var value;
 
-  StreamController<DatasetEvent> _changeCtrl = new StreamController.broadcast();
-
-  Stream<DatasetEvent> get onChange => _changeCtrl.stream;
+  final StreamController<DatasetEvent> _changeCtrl;
 
 //  Product(this.);
 
@@ -16,7 +14,8 @@ class Product {
   /// [Dataset]. When a dataset is syncable, it will be an object that one
   /// can subscribe to the changes of. Otherwise, it returns the actual
   /// computed value.
-  Product(columns, func(Product p, bool silent)) {
+  Product(columns, func(Product p, bool silent))
+      : _changeCtrl = new StreamController.broadcast() {
     // save column name. This will be necessary later
     // when we decide whether we need to update the column
     // when sync is called.
@@ -35,6 +34,8 @@ class Product {
 
     func(this, true);
   }
+
+  Stream<DatasetEvent> get onChange => _changeCtrl.stream;
 
   /// Returns the raw value of the product, most likely a number.
   dynamic val() => value;

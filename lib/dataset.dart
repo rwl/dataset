@@ -4,6 +4,7 @@ export 'src/dataset.dart'
     hide
         columns,
         rowIdByPosition,
+        rowPositionById,
         rowInternal,
         removeInternal,
         changeCtrl,
