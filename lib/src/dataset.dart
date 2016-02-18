@@ -8,69 +8,29 @@ import 'package:quiver/iterables.dart' show range;
 import 'package:csv/csv.dart';
 import 'package:csv/csv_settings_autodetection.dart';
 
+part 'column.dart';
 part 'view.dart';
 part 'derived.dart';
 part 'builder.dart';
-part 'importer.dart';
 part 'product.dart';
 part 'sync.dart';
 part 'types.dart';
-part 'parser.dart';
+part 'util.dart';
 
+part 'parsers/parser.dart';
 //part 'parsers/delimited.dart';
 part 'parsers/csv.dart';
 part 'parsers/google_spreadsheet.dart';
 part 'parsers/object.dart';
 part 'parsers/strict.dart';
 
+part 'importers/importer.dart';
 part 'importers/local.dart';
 part 'importers/google_spreadsheet.dart';
 part 'importers/polling.dart';
 part 'importers/remote.dart';
 
 part 'test.dart';
-
-int _idCounter = 0;
-
-num uniqueId() => _idCounter++;
-
-Iterable<dynamic> _flatten(Iterable<dynamic> iter) =>
-    iter.expand((a) => a is Iterable ? _flatten(a) : [a]);
-
-_sum(List arr) => arr.reduce((a, b) => a + b);
-
-_mean(Iterable data) => data.reduce((a, b) => a + b) / data.length;
-
-__median(List data) {
-  var d = new List.from(data);
-  d.sort();
-
-//    var mid = (data.length + 1) / 2;
-//    if (d.length % 2 != 0) {
-//      med = d[(mid - 1).toInt()];
-//    } else {
-//      med = (d[(mid - 1.5).toInt()] + d[(mid - 0.5).toInt()]) / 2;
-//    }
-
-  var n = data.length;
-  if (n % 2 != 0) {
-    return d[(n - 1) ~/ 2];
-  } else {
-    return (d[n ~/ 2] + d[(n ~/ 2) - 1]) / 2;
-  }
-}
-
-List _movingAvg(List arr, int size, [method(Iterable data)]) {
-  method = method ?? _mean;
-  var res = [];
-  for (var i = size - 1; i <= arr.length; i++) {
-    var win = arr.sublist(i - size < 0 ? 0 : i - size, i);
-    if (win.length == size) {
-      res.add(method(win));
-    }
-  }
-  return res;
-}
 
 class Dataset extends DataView {
   Importer importer;

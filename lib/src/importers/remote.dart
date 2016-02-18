@@ -1,6 +1,8 @@
 part of dataset;
 
 class Remote implements Importer {
+  final String _url;
+
   /**
    * Responsible for fetching data from a url.
    *
@@ -36,6 +38,8 @@ class Remote implements Importer {
       headers: options.headers
     };
   }
+
+  String get url => _url;
 
   fetch(options) {
     // call the original fetch method of object parsing.
