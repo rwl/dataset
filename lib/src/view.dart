@@ -854,7 +854,7 @@ class DataView {
         _oids.add([row[d.parent.idAttribute]]);
       } else {
         values[index] += 1;
-        _oids[index].push(row[d.parent.idAttribute]);
+        _oids[index].add(row[d.parent.idAttribute]);
       }
     });
 
@@ -922,12 +922,27 @@ class DataView {
           columns.forEach((columnToGroup) {
             var column = d.column(columnToGroup);
             var idCol = d.column(d.idAttribute);
-            column.data[categoryCount] = [];
-            idCol.data[categoryCount] = uniqueId();
+            try {
+              RangeError.checkValidIndex(categoryCount, column.data);
+              column.data[categoryCount] = [];
+            } on RangeError catch (_) {
+              column.data.add([]);
+            }
+            try {
+              RangeError.checkValidIndex(categoryCount, idCol.data);
+              idCol.data[categoryCount] = uniqueId();
+            } on RangeError catch (_) {
+              idCol.data.add(uniqueId());
+            }
           });
 
           // add the actual bin number to the right col
-          d.column(byColumn).data[categoryCount] = category;
+          try {
+            RangeError.checkValidIndex(categoryCount, d.column(byColumn).data);
+            d.column(byColumn).data[categoryCount] = category;
+          } on RangeError catch (_) {
+            d.column(byColumn).data.add(category);
+          }
 
           categoryCount++;
         }
@@ -951,13 +966,19 @@ class DataView {
         column.data.asMap().forEach((binPos, bin) {
           if (bin is List) {
             // save the original ids that created this group by?
-            oidcol.data[binPos] = oidcol.data[binPos] ?? [];
+            try {
+              RangeError.checkValidIndex(binPos, oidcol.data);
+              oidcol.data[binPos] = oidcol.data[binPos] ?? [];
+            } on RangeError catch (_) {
+              oidcol.data.add([]);
+            }
             oidcol.data[binPos]
                 .add(bin.map((row) => row[/*self*/ d.parent.idAttribute]));
-            oidcol.data[binPos] = _flatten(oidcol.data[binPos]);
+            oidcol.data[binPos] = _flatten(oidcol.data[binPos]).toList();
 
             // compute the final value.
-            column.data[binPos] = d.method(bin.map((row) => row[colName]));
+            column.data[binPos] =
+                d.method(bin.map((row) => row[colName]).toList());
             d.length++;
           }
         });

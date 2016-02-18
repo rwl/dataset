@@ -82,7 +82,16 @@ class MixedType<M extends Comparable> implements DataType<M> {
     } else if (s1 != null && s2 == null) {
       return 1;
     }
-    return s1.compareTo(s2);
+    if (s1.runtimeType == s2.runtimeType) {
+      if (s1 is Comparable) {
+        return s1.compareTo(s2);
+      } else if (s1 == s2) {
+        return 0;
+      } else {
+        return -1;
+      }
+    }
+    return -1;
   }
 
   /// The numeric representation of a mixed value. If it's

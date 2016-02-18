@@ -61,7 +61,7 @@ List _movingAvg(List arr, int size, [method(Iterable data)]) {
   method = method ?? _mean;
   var res = [];
   for (var i = size - 1; i <= arr.length; i++) {
-    var win = arr.sublist(i - size, i);
+    var win = arr.sublist(i - size < 0 ? 0 : i - size, i);
     if (win.length == size) {
       res.add(method(win));
     }
