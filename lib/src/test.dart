@@ -6,7 +6,11 @@ List rowIdByPosition(DataView dv) => dv._rowIdByPosition;
 
 Map rowPositionById(DataView dv) => dv._rowPositionById;
 
+Map columnPositionByName(DataView dv) => dv._columnPositionByName;
+
 Map rowInternal(DataView dv, int pos) => dv._row(pos);
+
+Column columnInternal(DataView dv, String name) => dv._column(name);
 
 void removeInternal(DataView dv, num rowId) => dv._remove(rowId);
 

@@ -5,6 +5,8 @@ import 'dart:async' show Future, StreamController, Stream;
 
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:quiver/iterables.dart' show range;
+import 'package:csv/csv.dart';
+import 'package:csv/csv_settings_autodetection.dart';
 
 part 'view.dart';
 part 'derived.dart';
@@ -15,7 +17,8 @@ part 'sync.dart';
 part 'types.dart';
 part 'parser.dart';
 
-part 'parsers/delimited.dart';
+//part 'parsers/delimited.dart';
+part 'parsers/csv.dart';
 part 'parsers/google_spreadsheet.dart';
 part 'parsers/object.dart';
 part 'parsers/strict.dart';
@@ -103,6 +106,9 @@ class Dataset extends DataView {
       String delimiter,
       int skipRows: 0,
       emptyValue,
+
+      /// Use the first row of delimited data as column rows.
+      bool labeled: true,
 
       /// Whether to expect the json in our format or whether to interpret
       /// as raw array of objects; shorthand for using the [Strict] parser.
@@ -204,7 +210,10 @@ class Dataset extends DataView {
         this.parser = new Strict();
       } else if (delimiter != null) {
         this.parser = new Delimited(
-            delimiter: delimiter, skipRows: skipRows, emptyValue: emptyValue);
+            delimiter: delimiter,
+            skipRows: skipRows,
+            emptyValue: emptyValue,
+            labeled: labeled);
       }
     }
 

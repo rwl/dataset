@@ -1,37 +1,42 @@
 import 'package:test/test.dart';
 import 'package:dataset/dataset.dart';
-import 'package:quiver/iterables.dart' show enumerate;
+import 'package:dataset/test.dart';
+
+import 'data/alphabet_strict.dart';
+import 'data/alphabet_obj.dart';
+import 'data/alphabet_csv.dart';
+import 'data/alphabet_customseparator.dart';
+import 'data/google_spreadsheet_strict.dart';
 
 verifyImport(obj, Dataset strictData) {
   // check properties exist
-  expect(strictData._columns, isNotNull, reason: "columns property exists");
+  expect(columns(strictData), isNotNull, reason: "columns property exists");
 
   // check all caches exist
-  expect(strictData._rowPositionById, isNotNull,
+  expect(rowPositionById(strictData), isNotNull,
       reason: "row position by id cache exists");
-  expect(strictData._rowIdByPosition, isNotNull,
+  expect(rowIdByPosition(strictData), isNotNull,
       reason: "row id by position cache exists");
-  expect(strictData._columnPositionByName, isNotNull,
+  expect(columnPositionByName(strictData), isNotNull,
       reason: "column position by name cache exists");
   expect(strictData.length, isNotNull, reason: "row count exists");
 
   // check row cache ids
   for (var i = 0; i < strictData.length; i++) {
-    var id = strictData._rowIdByPosition[i];
-    expect(strictData._rowPositionById[id], equals(i),
+    var id = rowIdByPosition(strictData)[i];
+    expect(rowPositionById(strictData)[id], equals(i),
         reason: "row $i id correctly cached");
   }
 
   // verify all rows have the proper amount of data
-  strictData._columns.forEach((column) {
+  columns(strictData).forEach((column) {
     expect(column.data.length, equals(strictData.length),
         reason: "row count for column ${column.name} is correct.");
   });
 
   // Verify all column position have been set.
-  enumerate(strictData._columns).forEach((iv) {
-    var column = iv.value, i = iv.index;
-    expect(strictData._columnPositionByName[column.name], equals(i),
+  columns(strictData).asMap().forEach((i, column) {
+    expect(columnPositionByName(strictData)[column.name], equals(i),
         reason: "proper column position has been set");
   });
 
@@ -45,34 +50,34 @@ verifyImport(obj, Dataset strictData) {
 checkColumnTypes(Dataset strictData) {
   // check data size
   expect(strictData.length, equals(24), reason: "there are 24 rows");
-  expect(strictData._columns.length, equals(5), reason: "there are 5 columns");
+  expect(columns(strictData).length, equals(5), reason: "there are 5 columns");
 
   // check column types
-  expect(strictData._column('_id').type, equals("number"),
+  expect(columnInternal(strictData, '_id').type, equals("number"),
       reason: "_id is number type");
-  expect(strictData._column('character').type, equals("string"),
+  expect(columnInternal(strictData, 'character').type, equals("string"),
       reason: "character is string type");
-  expect(strictData._column('name').type, equals("string"),
+  expect(columnInternal(strictData, 'name').type, equals("string"),
       reason: "name is string type");
-  expect(strictData._column('is_modern').type, equals("boolean"),
+  expect(columnInternal(strictData, 'is_modern').type, equals("boolean"),
       reason: "is_modern is boolean type");
-  expect(strictData._column('numeric_value').type, equals("number"),
+  expect(columnInternal(strictData, 'numeric_value').type, equals("number"),
       reason: "numeric_value is numeric type");
 }
 
-checkColumnTypesCustomidAttribute(strictData) {
+checkColumnTypesCustomidAttribute(Dataset strictData) {
   // check data size
   expect(strictData.length, equals(24), reason: "there are 24 rows");
-  expect(strictData._columns.length, equals(4), reason: "there are 5 columns");
+  expect(columns(strictData).length, equals(4), reason: "there are 5 columns");
 
   // check column types
-  expect(strictData._column('character').type, equals("string"),
+  expect(columnInternal(strictData, 'character').type, equals("string"),
       reason: "character is string type");
-  expect(strictData._column('name').type, equals("string"),
+  expect(columnInternal(strictData, 'name').type, equals("string"),
       reason: "name is string type");
-  expect(strictData._column('is_modern').type, equals("boolean"),
+  expect(columnInternal(strictData, 'is_modern').type, equals("boolean"),
       reason: "is_modern is boolean type");
-  expect(strictData._column('numeric_value').type, equals("number"),
+  expect(columnInternal(strictData, 'numeric_value').type, equals("number"),
       reason: "numeric_value is numeric type");
 }
 
@@ -98,40 +103,45 @@ importersTest() {
     });
   });
 
-  group("Column creation, coercion &amp; type setting", () {
+  group("Column creation, coercion & type setting", () {
     test("Manually creating a column", () {
       var ds = new Dataset(columns: [
         {'name': 'testOne'},
         {'name': 'testTwo', 'type': 'time'}
       ]);
-      expect(ds._column('testOne').name, equals('testOne'),
+      expect(columnInternal(ds, 'testOne').name, equals('testOne'),
           reason: 'testOne column created');
-      expect(ds._column('testTwo').name, equals('testTwo'),
+      expect(columnInternal(ds, 'testTwo').name, equals('testTwo'),
           reason: 'testTwo column created');
-      expect(ds._column('testTwo').type, equals('time'),
+      expect(columnInternal(ds, 'testTwo').type, equals('time'),
           reason: 'testTwo column has time type');
     });
 
     test("Manual column type override", () {
       var ds = new Dataset(
-          data: Miso.alphabet_strict,
+          data: alphabet_strict,
           strict: true,
           columns: [
             {'name': 'numeric_value', 'type': 'string'}
           ]);
       ds.fetch().then((_) {
-        expect(ds._column('numeric_value').type, equals("string"),
+        expect(columnInternal(ds, 'numeric_value').type, equals("string"),
             reason: "numeric_value is type string");
-        expect(_.uniq(ds._column('numeric_value').data)[0], equals("1"),
+        expect(
+            columnInternal(ds, 'numeric_value')
+                .data
+                .where((d) => d != null)
+                .first,
+            equals("1"),
             reason: "numeric_value has been coerced to string");
       });
     });
 
     test("Manual column type override", () {
-      var data = _.clone(alphabet_strict);
-      data.columns[1].data = [];
-      for (var i = 0; i < data.columns[0].data.length; i++) {
-        data.columns[1].data.push(moment());
+      var data = new Map.from(alphabet_strict);
+      data['columns'][1]['data'] = [];
+      for (var i = 0; i < data['columns'][0]['data'].length; i++) {
+        data['columns'][1]['data'].add(new DateTime.now());
       }
 
       var ds = new Dataset(
@@ -142,10 +152,9 @@ importersTest() {
           ]);
 
       ds.fetch().then((_) {
-        expect(ds._column('name').type, equals("time"),
+        expect(columnInternal(ds, 'name').type, equals("time"),
             reason: "name column has a type of time");
-        //nasty check that it's a moment object
-        expect(ds._column('name').data[0].version, equals(moment().version),
+        expect(columnInternal(ds, 'name').data[0] is DateTime, isTrue,
             reason: "is a moment object");
       });
     });
@@ -155,14 +164,14 @@ importersTest() {
         {'character': '12/31 2012'},
         {'character': '01/31 2011'}
       ], columns: [
-        {'name': 'character', 'type': 'time', 'format': 'MM/DD YYYY'}
+        {'name': 'character', 'type': 'time', 'format': 'MM/dd yyyy'}
       ]);
       ds.fetch().then((_) {
-        expect(ds._column('character').type, equals("time"),
+        expect(columnInternal(ds, 'character').type, equals("time"),
             reason: "character column has a type of time");
         // verify format was properly coerced
-        expect(ds._column('character').data[0].valueOf(),
-            equals(moment("12/31 2012", "MM/DD YYYY")));
+        expect(columnInternal(ds, 'character').data[0],
+            equals(new DateTime(2012, 12, 31)));
       });
     });
   });
@@ -175,14 +184,12 @@ importersTest() {
       });
     });
 
-    test("Basic json url fetch through Dataset API", /*46,*/ () {
+    /*test("Basic json url fetch through Dataset API", /*46,*/ () {
       var url = "data/alphabet_strict.json";
       var ds = new Dataset(url: url, jsonp: false, strict: true, ready: (d) {
         verifyImport({}, d);
-        start();
       });
-      ds.fetch();
-      stop();
+      expect(ds.fetch(), completes);
     });
 
     test(
@@ -195,10 +202,10 @@ importersTest() {
           idAttribute: "name",
           strict: true, ready: (d) {
         verifyImport({}, d);
-        start();
+//        start();
       });
       ds.fetch();
-      stop();
+//      stop();
     });
 
     test("Basic json url fetch through Dataset API + url is a function", /*46,*/
@@ -208,10 +215,10 @@ importersTest() {
           jsonp: false,
           strict: true, ready: (d) {
         verifyImport({}, d);
-        start();
+//        start();
       });
       ds.fetch();
-      stop();
+//      stop();
     });
 
     test("Basic jsonp url fetch with Dataset API", /*46,*/ () {
@@ -220,10 +227,10 @@ importersTest() {
         return raw.data;
       }, ready: (d) {
         verifyImport({}, d);
-        start();
+//        start();
       });
       ds.fetch();
-      stop();
+//      stop();
     });
 
     test(
@@ -234,10 +241,10 @@ importersTest() {
         return raw.data;
       }, ready: (d) {
         verifyImport({}, d);
-        start();
+//        start();
       });
       ds.fetch();
-      stop();
+//      stop();
     });
 
     test("Basic jsonp url fetch with Dataset API setting a callback in the url",
@@ -247,10 +254,10 @@ importersTest() {
         return raw.data;
       }, ready: (d) {
         verifyImport({}, d);
-        start();
+//        start();
       });
       ds.fetch();
-      stop();
+//      stop();
     });
 
     test(
@@ -261,10 +268,10 @@ importersTest() {
         return raw.data;
       }, ready: (d) {
         verifyImport({}, d);
-        start();
+//        start();
       });
       ds.fetch();
-      stop();
+//      stop();
     });
 
     test("Basic jsonp url fetch with Dataset API &amp; custom callback", /*47,*/
@@ -274,36 +281,34 @@ importersTest() {
         return raw.data;
       }, ready: (d) {
         verifyImport({}, d);
-        ok(/*typeof*/ window.foobar != "undefined");
-        start();
+        expect(window.foobar, isNotNull);
+//        start();
       }, callback: 'foobar');
       ds.fetch();
-      stop();
-    });
+//      stop();
+    });*/
 
     test("Basic delimiter parsing test with Dataset API", /*46,*/ () {
-      var ds = new Dataset(data: window.Miso.alphabet_csv, delimiter: ",");
+      var ds = new Dataset(data: alphabet_csv, delimiter: ",");
       ds.fetch().then((_) {
         verifyImport(alphabet_strict, ds);
       });
     });
 
-    test("Basic delimiter parsing test with Dataset API via url", /*46,*/ () {
-      stop();
-      var ds = new Dataset(
-          url: "data/alphabet.csv", parser: Dataset.Parsers.Delimited);
+    /*test("Basic delimiter parsing test with Dataset API via url", /*46,*/ () {
+//      stop();
+      var ds = new Dataset(url: "data/alphabet.csv", parser: Delimited);
 
       ds.fetch().then((d) {
         verifyImport(alphabet_strict, d);
-        start();
+//        start();
       });
     });
 
     test("Basic delimiter parsing test with custom separator with Dataset API",
         /*46,*/ () {
-      var ds = new Dataset(
-          data: window.Miso.alphabet_customseparator, delimiter: "###");
-      ds.fetch().then(() {
+      var ds = new Dataset(data: alphabet_customseparator, delimiter: "###");
+      ds.fetch().then((_) {
         verifyImport(alphabet_strict, ds);
       });
     });
@@ -315,10 +320,10 @@ importersTest() {
           url: "data/alphabet_customseparator.json", delimiter: "###");
       ds.fetch().then((_) {
         verifyImport(alphabet_strict, ds);
-        start();
+//        start();
       });
-      stop();
-    });
+//      stop();
+    });*/
 
     test("Delimiter empty value override", /*2,*/ () {
       var data = "Col1,Col2,Col3\n" + "1,2,3\n" + "1,,5\n" + "5,,4";
@@ -332,15 +337,16 @@ importersTest() {
 
     test("Delimiter error catching too many items", /*1,*/ () {
       var data = "Col1,Col2,Col3\n" + "1,2,3\n" + "1,,4,5\n" + "5,3,4";
-      try {
-        var ds = new Dataset(data: data, delimiter: ",");
-        ds.fetch();
-      } catch (e) {
-        expect(
-            e.message.indexOf(
-                "Error while parsing delimited data on row 2. Message: Too many items in row"),
-            greaterThan(-1));
-      }
+//      try {
+      var ds = new Dataset(data: data, delimiter: ",");
+      expect(
+          ds.fetch().then((d) {
+            expect(d.column("Col2").data[1], isNull);
+          }),
+          completes);
+//      } catch (e) {
+//        expect(e.message.indexOf( "Error while parsing delimited data on row 2. Message: Too many items in row"), greaterThan(-1));
+//      }
     });
 
     test("Delimiter skip rows", /*1,*/ () {
@@ -356,7 +362,7 @@ importersTest() {
       });
     });
 
-    test("Delimiter skip rows 2", /*1,*/ () {
+    test("Delimiter skip 3 rows", /*1,*/ () {
       var data = "bla bla skip self!\n" +
           "bla bla skip self!\n" +
           "bla bla skip self!\n" +
@@ -373,17 +379,18 @@ importersTest() {
 
     test("Delimiter error catching not enough items", /*1,*/ () {
       var data = "Col1,Col2,Col3\n" + "1,2,3\n" + "1,5\n" + "5,3,4";
-      try {
-        var ds = new Dataset(data: data, delimiter: ",");
-        ds.fetch();
-      } catch (e) {
-        expect(
-            e.message,
-            equals(
-                "Error while parsing delimited data on row 2. Message: Not enough items in row"));
-      }
+//      try {
+      var ds = new Dataset(data: data, delimiter: ",");
+      expect(
+          ds.fetch().then((d) {
+            expect(d.column('Col3').data[1], isNull);
+          }),
+          completes);
+//      } catch (e) {
+//        expect(e.message, equals("Error while parsing delimited data on row 2. Message: Not enough items in row"));
+//      }
     });
-
+    /*
     // test("Delimited CR characters caught", 2, () {
     // var ds = new Miso.Dataset({
     // url : "data/offending.csv",
@@ -401,16 +408,16 @@ importersTest() {
   });
 
   group("Google Spreadsheet Support", () {
-    void verifyGoogleSpreadsheet(d, obj) {
-      expect(
-          d._columnPositionByName.keys, equals(obj._columnPositionByName.keys));
-      expect(d._rowIdByPosition.length, equals(obj._rowIdByPosition.length));
+    void verifyGoogleSpreadsheet(Dataset d, Map obj) {
+      expect(columnPositionByName(d).keys,
+          equals(obj['_columnPositionByName'].keys));
+      expect(rowIdByPosition(d).length, equals(obj['_rowIdByPosition'].length));
 
       // ignoring id column, since that changes.
       for (var i = 1; i < d.length; i++) {
-        expect(d._columns[i].data, equals(obj._columns[i].data),
-            reason: "Expected: ${d._columns[i].data}" +
-                " Got: ${google_spreadsheet_strict._columns[i].data}");
+        expect(columns(d)[i].data, equals(obj['_columns'][i].data),
+            reason: "Expected: ${columns(d)[i].data}" +
+                " Got: ${google_spreadsheet_strict['_columns'][i].data}");
       }
     }
 
@@ -419,15 +426,15 @@ importersTest() {
       var worksheet = "1";
 
       var ds = new Dataset(
-          importer: Importers.GoogleSpreadsheet,
-          parser: Parsers.GoogleSpreadsheet,
+          importer: GoogleSpreadsheetImporter,
+          parser: GoogleSpreadsheet,
           key: key,
           worksheet: worksheet, ready: (d) {
         verifyGoogleSpreadsheet(d, google_spreadsheet_strict);
-        start();
+//        start();
       });
       ds.fetch();
-      stop();
+//      stop();
     });
 
     test("Google spreadsheet fast parsing", () {
@@ -438,16 +445,16 @@ importersTest() {
           key: key,
           sheetName: sheetName,
           fast: true,
-          importer: Importers.GoogleSpreadsheet,
-          parser: Parsers.GoogleSpreadsheet);
-      stop();
+          importer: GoogleSpreadsheetImporter,
+          parser: GoogleSpreadsheet);
+//      stop();
       ds.fetch().then((d) {
         expect(ds.length, equals(6));
-        expect(d._columns.length, equals(3));
+        expect(columns(d).length, equals(3));
         expect(ds.column("State").data,
             equals(["AZ", "AZ", "AZ", "MA", "MA", "MA"]));
         expect(ds.column("Value").data, equals([10, 20, 30, 1, 4, 7]));
-        start();
+//        start();
       });
     });
 
@@ -455,12 +462,12 @@ importersTest() {
       var ds = new Dataset(
           key: "0AgzGUzeWla8QdDZLZnVieS1pOU5VRGxJNERvZ000SUE",
           worksheet: "1",
-          importer: Importers.GoogleSpreadsheet,
-          parser: Parsers.GoogleSpreadsheet);
+          importer: GoogleSpreadsheetImporter,
+          parser: GoogleSpreadsheet);
       ds.fetch().then((ds) {
-        expect(ds._columns.length, equals(5));
+        expect(columns(ds).length, equals(5));
         var row = {
-          '_id': self.rowByPosition(0)._id,
+          '_id': ds.rowByPosition(0)['_id'],
           'one': 1,
           'two': 2,
           'three': 9,
@@ -470,9 +477,9 @@ importersTest() {
         row.forEach((v, k) {
           expect(ds.rowByPosition(0)[k], equals(v));
         });
-        start();
+//        start();
       }, onError: () {});
-      stop();
+//      stop();
     });
 
     test("more columns than rows in Google Spreadsheet fast parse", () {
@@ -480,12 +487,12 @@ importersTest() {
           key: "0AgzGUzeWla8QdDZLZnVieS1pOU5VRGxJNERvZ000SUE",
           worksheet: "1",
           fast: true,
-          importer: Dataset.Importers.GoogleSpreadsheet,
-          parser: Dataset.Parsers.GoogleSpreadsheet);
+          importer: GoogleSpreadsheetImporter,
+          parser: GoogleSpreadsheet);
       ds.fetch().then((ds) {
-        expect(ds._columns.length, equals(5));
+        expect(columns(ds).length, equals(5));
         var row = {
-          '_id': self.rowByPosition(0)._id,
+          '_id': ds.rowByPosition(0)['_id'],
           'one': 1,
           'two': 2,
           'three': 9,
@@ -495,20 +502,20 @@ importersTest() {
         row.forEach((v, k) {
           expect(ds.rowByPosition(0)[k], equals(v));
         });
-        start();
+//        start();
       }, onError: () {});
-      stop();
+//      stop();
     });
   });
 
   group("Polling", () {
     test("Basic polling importer api", () {
-      stop();
+//      stop();
       var reqs = 5, madereqs = 0;
-      expect(reqs);
+//      expect(reqs);
 
-      var importer = new Importers.Polling(
-          url: "/poller/non_overlapping/5.json", interval: 100);
+      var importer =
+          new Polling(url: "/poller/non_overlapping/5.json", interval: 100);
 
       var initId = null;
       importer.fetch().then((data) {
@@ -517,7 +524,7 @@ importersTest() {
           importer.stop();
           expect(data[0].id, equals((initId + (madereqs * 10))),
               reason: data[0].id + "," + (initId + (madereqs * 10)));
-          start();
+//          start();
         } else if (madereqs == 0) {
           initId = data[0].id;
         } else {
@@ -532,7 +539,7 @@ importersTest() {
     });
 
     test("Basic polling non overlapping through dataset api", () {
-      stop();
+//      stop();
       //expect(18);
 
       var startId = (Math.random() * 100).floor();
@@ -548,7 +555,7 @@ importersTest() {
 
           // check that the length is correct
           expect(ds.length, equals(expectedSize));
-          expect(ds._columns.length, equals(4));
+          expect(columns(ds).length, equals(4));
           ds.eachColumn((cn, c, _) {
             expect(c.data.length, equals(expectedSize));
           });
@@ -559,30 +566,30 @@ importersTest() {
           });
 
           // check values
-          expect(ds._columns[1].data[0], equals(startId + "_key"));
-          expect(ds._columns[2].data[0], equals(startId + "_value"));
-          expect(ds._columns[3].data[0], equals(startId));
+          expect(columns(ds)[1].data[0], equals(startId + "_key"));
+          expect(columns(ds)[2].data[0], equals(startId + "_value"));
+          expect(columns(ds)[3].data[0], equals(startId));
 
-          expect(ds._columns[1].data[expectedSize - 1],
+          expect(columns(ds)[1].data[expectedSize - 1],
               equals((startId + expectedSize - 1) + "_key"));
-          expect(ds._columns[2].data[expectedSize - 1],
+          expect(columns(ds)[2].data[expectedSize - 1],
               equals((startId + expectedSize - 1) + "_value"));
-          expect(ds._columns[3].data[expectedSize - 1],
+          expect(columns(ds)[3].data[expectedSize - 1],
               equals((startId + expectedSize - 1)));
 
           // check cache sizes
-          var cachedRowids = ds._rowPositionById.keys.map((i) {
+          var cachedRowids = rowPositionById(ds).keys.map((i) {
             return /*+*/ i;
           });
 
-          expect(ds._columnPositionByName,
+          expect(columnPositionByName(ds),
               equals({'_id': 0, 'id': 3, 'key': 1, 'value': 2}));
-          expect(ds._rowIdByPosition.length, equals(expectedSize));
+          expect(rowIdByPosition(ds).length, equals(expectedSize));
 
-          expect(ds._rowIdByPosition.values, equals(cachedRowids));
-          expect(cachedRowids, equals(ds._columns[0].data));
+          expect(rowIdByPosition(ds).values, equals(cachedRowids));
+          expect(cachedRowids, equals(columns(ds)[0].data));
 
-          start();
+//          start();
         } else {
           madereqs++;
         }
@@ -592,15 +599,10 @@ importersTest() {
     });
 
     test("Polling with unique constraint for updates", /*32,*/ () {
-      stop();
+//      stop();
 
-      var counter,
-          baseCounter,
-          requests = 3,
-          madereqs = 1,
-          expectedSize = 3,
-          events = [],
-          addEvents = [];
+      int counter, baseCounter, requests = 3, madereqs = 1, expectedSize = 3;
+      var events = [], addEvents = [];
 
       var ds = new Dataset(
           url: "/poller/updated.json",
@@ -614,31 +616,31 @@ importersTest() {
         expect(addEvents.length, equals(1));
         expect(events.length / 3, equals(requests - 1),
             reason: 'one less set of update events than reqs');
-        range(requests).forEach((i) {
-          var row = events[i][0].changed;
-          if (row.name == 'alpha') {
-            expect(row.a, equals(counter));
-            expect(row.b, equals(counter * 2));
+        for (var i = 0; i < requests; i++) {
+          Map row = events[i][0].changed;
+          if (row['name'] == 'alpha') {
+            expect(row['a'], equals(counter));
+            expect(row['b'], equals(counter * 2));
           }
-          if (row.name == 'beta') {
-            expect(row.a, equals(counter + 1), reason: 'beta +1 1');
-            expect(row.b, equals(counter - 1), reason: 'beta +1 1');
+          if (row['name'] == 'beta') {
+            expect(row['a'], equals(counter + 1), reason: 'beta +1 1');
+            expect(row['b'], equals(counter - 1), reason: 'beta +1 1');
           }
-          if (row.name == 'delta') {
-            expect(row.a, equals(counter + 2), reason: 'delta +- 2');
-            expect(row.b, equals(counter - 2), reason: 'delta +- 2');
+          if (row['name'] == 'delta') {
+            expect(row['a'], equals(counter + 2), reason: 'delta +- 2');
+            expect(row['b'], equals(counter - 2), reason: 'delta +- 2');
           }
           if (i % 3 == 2) {
             counter += 1;
           }
-        });
+        }
       }
 
-      ds.subscribe('update', (event) {
+      ds.onUpdate.listen((event) {
         events.add(event.deltas);
       });
 
-      ds.subscribe('add', (event) {
+      ds.onAdd.listen((event) {
         addEvents.add(event.deltas);
       });
 
@@ -651,28 +653,28 @@ importersTest() {
 
         //set the counter on the first req to
         //sync req count with server
-        if (!counter) {
-          counter = ds.rowByPosition(0).a;
+        if (counter == 0) {
+          counter = ds.rowByPosition(0)['a'];
           baseCounter = counter;
         }
 
         var row0 = ds.rowByPosition(0);
-        expect(row0.a, equals(counter));
-        expect(row0.b, equals(counter * 2));
+        expect(row0['a'], equals(counter));
+        expect(row0['b'], equals(counter * 2));
 
         var row1 = ds.rowByPosition(1);
-        expect(row1.a, equals(counter + 1));
-        expect(row1.b, equals(counter - 1));
+        expect(row1['a'], equals(counter + 1));
+        expect(row1['b'], equals(counter - 1));
 
         var row2 = ds.rowByPosition(2);
-        expect(row2.a, equals(counter + 2));
-        expect(row2.b, equals(counter - 2));
+        expect(row2['a'], equals(counter + 2));
+        expect(row2['b'], equals(counter - 2));
 
         // done
         if (madereqs == requests) {
           ds.importer.stop();
           verifyEvents();
-          start();
+//          start();
         }
         madereqs++;
         counter += 1;
@@ -682,7 +684,7 @@ importersTest() {
     });
 
     test("Polling with unique constraint", () {
-      stop();
+//      stop();
       //expect(11);
 
       var startId = (Math.random() * 100).floor();
@@ -693,7 +695,7 @@ importersTest() {
           interval: 100,
           uniqueAgainst: "key");
 
-      ds.fetch().then((_) {
+      ds.fetch().then((d) {
         // done
         if (madereqs == reqs) {
           ds.importer.stop();
@@ -711,23 +713,23 @@ importersTest() {
             keycol.add((startId + i) + "_key");
             valcol.add((startId + i) + "_value");
           }
-          expect(idscol, equals(self.column("id").data));
-          expect(keycol, equals(self.column("key").data));
-          expect(valcol, equals(self.column("value").data));
+          expect(idscol, equals(d.column("id").data));
+          expect(keycol, equals(d.column("key").data));
+          expect(valcol, equals(d.column("value").data));
 
           // check cache sizes
-          var cachedRowids = _.map(_.keys(ds._rowPositionById), (i) {
+          var cachedRowids = rowPositionById(ds).keys.map((i) {
             return /*+*/ i;
           });
 
-          expect(ds._columnPositionByName,
+          expect(columnPositionByName(ds),
               equals({'_id': 0, 'id': 3, 'key': 1, 'value': 2}));
-          expect(ds._rowIdByPosition.length, equals(expectedSize));
+          expect(rowIdByPosition(ds).length, equals(expectedSize));
 
-          expect(ds._rowIdByPosition.values, equals(cachedRowids));
-          expect(cachedRowids, equals(ds._columns[0].data));
+          expect(rowIdByPosition(ds).values, equals(cachedRowids));
+          expect(cachedRowids, equals(columns(ds)[0].data));
 
-          start();
+//          start();
         } else {
           madereqs++;
         }
@@ -737,10 +739,10 @@ importersTest() {
     });
 
     test("Polling with reset on Fetch", () {
-      stop();
+//      stop();
 
       var startId = (Math.random() * 100).floor();
-      var reqs = 6, madereqs = 1, expectedSize = 10;
+      int reqs = 6, madereqs = 1, expectedSize = 10;
 
       var ds = new Dataset(
           url: "/poller/overlapping/$startId/5.json",
@@ -771,21 +773,23 @@ importersTest() {
           expect(valcol, equals(d.column("value").data));
 
           // check cache sizes
-          var cachedRowids = ds._rowPositionById.keys.map((i) {
+          var cachedRowids = rowPositionById(ds).keys.map((i) {
             return /*+*/ i;
           });
 
-          expect(ds._columnPositionByName,
+          expect(columnPositionByName(ds),
               equals({'_id': 0, 'id': 3, 'key': 1, 'value': 2}));
-          expect(ds._rowIdByPosition.length, equals(expectedSize));
+          expect(rowIdByPosition(ds).length, equals(expectedSize));
 
-          expect(ds._rowIdByPosition.values, equals(cachedRowids));
-          expect(cachedRowids, equals(ds._columns[0].data));
-          start();
+          expect(rowIdByPosition(ds).values, equals(cachedRowids));
+          expect(cachedRowids, equals(columns(ds)[0].data));
+//          start();
         } else {
           madereqs++;
         }
       });
-    });
+    });*/
   });
 }
+
+main() => importersTest();
