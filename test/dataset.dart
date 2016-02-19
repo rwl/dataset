@@ -140,7 +140,7 @@ datasetTest() {
     }, throws, reason: "You can't update the id column");
   });
 
-  test("#105 - updating a row with a function", () async {
+  test("updating a row with a function", () async {
     var ds = await util.baseSample();
     ds.updateWhere((row) {
       return {
@@ -156,8 +156,7 @@ datasetTest() {
     expect(ds.column("three").data, equals([0, 100, 0]));
   });
 
-  test(
-      "#105 - updating a row with a function skips a row when false is returned",
+  test("updating a row with a function skips a row when false is returned",
       () async {
     var ds = await util.baseSample();
     ds.updateWhere((row) {
@@ -177,8 +176,8 @@ datasetTest() {
     expect(ds.column("three").data, equals([7, 100, 0]));
   });
 
-  group("Computed Columns", () {
-    test("Add computed column to empty dataset", () {
+  group("computed columns", () {
+    test("add computed column to empty dataset", () {
       var ds = new Dataset(data: {
         'columns': [
           {'name': "one", 'data': []},
@@ -197,7 +196,7 @@ datasetTest() {
       });
     });
 
-    test("Add a computed column with a bogus type - should fail", () {
+    test("add a computed column with a bogus type - should fail", () {
       var ds = new Dataset(data: {
         'columns': [
           {'name': "one", 'data': []},
@@ -218,7 +217,7 @@ datasetTest() {
       });
     });
 
-    test("Add a computed column with a name that already exists", () {
+    test("add a computed column with a name that already exists", () {
       var ds = new Dataset(data: {
         'columns': [
           {'name': "one", 'data': []},
@@ -239,7 +238,7 @@ datasetTest() {
       });
     });
 
-    test("Add computed column to dataset with values", () {
+    test("add computed column to dataset with values", () {
       var ds = new Dataset(data: {
         'columns': [
           {
@@ -265,7 +264,7 @@ datasetTest() {
       });
     });
 
-    test("Add row to a dataset with one computed column", () {
+    test("add row to a dataset with one computed column", () {
       var ds = new Dataset(data: {
         'columns': [
           {
@@ -298,7 +297,7 @@ datasetTest() {
     });
 
     test(
-        "Add a row to a dataset with multiple computed columns one of which depends on a computed column",
+        "add a row to a dataset with multiple computed columns one of which depends on a computed column",
         () {
       var ds = new Dataset(data: {
         'columns': [
@@ -338,7 +337,7 @@ datasetTest() {
       });
     });
 
-    test("Can't add a row with a computed column value.", () {
+    test("can't add a row with a computed column value.", () {
       var ds = new Dataset(data: {
         'columns': [
           {
@@ -378,7 +377,7 @@ datasetTest() {
       });
     });
 
-    test("Update a row in a dataset with a single computed column", () {
+    test("update a row in a dataset with a single computed column", () {
       var ds = new Dataset(data: {
         'columns': [
           {

@@ -50,13 +50,12 @@ class DatasetEvent {
   List affectedColumns() {
     var cols = [];
     deltas.forEach((Delta delta) {
-      var old = (delta.old ?? []);
-      var changed = (delta.changed ?? []);
-      cols = _.chain(cols).union(old.keys, changed.keys).reject((col) {
-        return col == dataset.idAttribute;
-      }).value();
+      Map old = delta.old is Map ? delta.old : {};
+      Map changed = delta.changed is Map ? delta.changed : {};
+      cols.addAll(concat([old.keys, changed.keys])
+          .toSet()
+          .where((String col) => col != dataset.idAttribute));
     });
-
     return cols;
   }
 

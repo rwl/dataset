@@ -7,8 +7,8 @@ import 'package:dataset/test.dart';
 import 'helpers.dart' as util;
 
 productsTest() {
-  group("Products :: Sum", () {
-    test("Basic Sum Product", () async {
+  group("sum", () {
+    test("basic sum product", () async {
       var ds = await util.baseSyncingSample();
 
       columns(ds).forEach((column) {
@@ -21,7 +21,7 @@ productsTest() {
       });
     });
 
-    test("Basic Sum Product with custom idAttribute", () async {
+    test("basic sum product with custom idAttribute", () async {
       var ds = await util.baseSyncingSampleCustomidAttribute();
 
       columns(ds).forEach((column) {
@@ -31,7 +31,7 @@ productsTest() {
       });
     });
 
-    test("Basic Sum Product Non Syncable", () async {
+    test("basic sum product non syncable", () async {
       var ds = await util.baseSample();
 
       columns(ds).forEach((column) {
@@ -46,7 +46,7 @@ productsTest() {
       });
     });
 
-    test("Time Sum Should Fail", /*2,*/ () {
+    test("time sum should fail", () {
       var ds = new Dataset(data: [
         {"one": 1, "t": "2010/01/13"},
         {"one": 5, "t": "2010/05/15"},
@@ -66,8 +66,8 @@ productsTest() {
     });
   });
 
-  group("Products :: Max", () {
-    test("Basic Max Product", () async {
+  group("max", () {
+    test("basic max product", () async {
       var ds = await util.baseSyncingSample();
 
       // check each column
@@ -84,7 +84,7 @@ productsTest() {
       expect(ds.max(ds.columnNames()).val(), equals(9));
     });
 
-    test("Basic Max Calculation no syncable", () async {
+    test("basic max calculation no syncable", () async {
       var ds = await util.baseSample();
 
       // check each column
@@ -101,7 +101,7 @@ productsTest() {
       expect(ds.max(ds.columnNames()), equals(9));
     });
 
-    test("Time Max Product", () async {
+    test("time max product", () async {
       var ds = await (new Dataset(data: [
         {"one": 1, "t": "2010/01/13"},
         {"one": 5, "t": "2010/05/15"},
@@ -115,7 +115,7 @@ productsTest() {
           equals(ds.column("t").data[1].millisecondsSinceEpoch));
     });
 
-    test("Time Max Product non syncable", () {
+    test("time max product non syncable", () {
       var ds = new Dataset(data: [
         {"one": 1, "t": "2010/01/13"},
         {"one": 5, "t": "2010/05/15"},
@@ -131,8 +131,8 @@ productsTest() {
     });
   });
 
-  group("Products :: Min", () {
-    test("Basic Min Product", () async {
+  group("min", () {
+    test("basic min product", () async {
       var ds = await util.baseSyncingSample();
 
       // check each column
@@ -150,7 +150,7 @@ productsTest() {
       expect(ds.min().val(), equals(1));
     });
 
-    test("Basic Min Product Non Syncable", () async {
+    test("basic min product non syncable", () async {
       var ds = await util.baseSample();
 
       // check each column
@@ -172,7 +172,7 @@ productsTest() {
       expect(ds.min(names), equals(1));
     });
 
-    test("Time Min Product", () {
+    test("time min product", () {
       var ds = new Dataset(data: [
         {"one": 1, "t": "2010/01/13"},
         {"one": 5, "t": "2010/05/15"},
@@ -192,7 +192,7 @@ productsTest() {
       });
     });
 
-    test("Time Min Product Non Syncable", /*2,*/ () {
+    test("time min product non syncable", /*2,*/ () {
       var ds = new Dataset(data: [
         {"one": 1, "t": "2010/01/13"},
         {"one": 5, "t": "2010/05/15"},
@@ -208,7 +208,7 @@ productsTest() {
       });
     });
 
-    test("Basic Mean Product", () {
+    test("basic mean product", () {
       var ds = new Dataset(data: {
         'columns': [
           {
@@ -257,7 +257,7 @@ productsTest() {
       });
     });
 
-    test("Basic Mean Product Non Syncable", () {
+    test("basic mean product non syncable", () {
       var ds = new Dataset(data: {
         'columns': [
           {
@@ -296,7 +296,7 @@ productsTest() {
       });
     });
 
-    test("Basic Time Mean Product", () {
+    test("basic time mean product", () {
       var fmt = new DateFormat.yMd();
       var ds = new Dataset(data: [
         {"one": 1, "t": "2010/01/01"},
@@ -324,8 +324,8 @@ productsTest() {
 
   // TODO: add time mean product here!!!
 
-  group("Products :: Sync", () {
-    test("Basic Sync Recomputation", () async {
+  group("sync", () {
+    test("basic sync recomputation", () async {
       var ds = await util.baseSyncingSample();
       var max = ds.max(["one"]);
 
@@ -338,7 +338,7 @@ productsTest() {
       });
     });
 
-    test("Basic Sync No Recomputation Non Syncing", () async {
+    test("basic sync no recomputation non syncing", () async {
       var ds = await util.baseSample();
       var max = ds.max(["one"]);
 
@@ -349,7 +349,7 @@ productsTest() {
       expect(max, equals(3), reason: "max was not updated");
     });
 
-//    test("Basic subscription to product changes", () async {
+//    test("basic subscription to product changes", () async {
 //      var ds = await util.baseSyncingSample();
 //      Product max = ds.max(["one"]);
 //
@@ -365,7 +365,7 @@ productsTest() {
 //      ds.update({'_id': rowIdByPosition(ds)[0], 'one': 34});
 //    });
 
-    test("Basic subscription to product changes on syncable doesn't trigger",
+    test("basic subscription to product changes on syncable doesn't trigger",
         () async {
       var ds = await util.baseSample();
       var max = ds.max(["one"]);
@@ -374,7 +374,7 @@ productsTest() {
       expect(max is num, isTrue);
     });
 
-//    test("Subscription doesn't trigger when value doesn't change", () async {
+//    test("subscription doesn't trigger when value doesn't change", () async {
 //      var ds = await util.baseSyncingSample();
 //      Product max = ds.max(["one"]);
 //      var counter = 0;
@@ -390,7 +390,7 @@ productsTest() {
 //    });
 //  });
 //
-//  group("Products :: Custom", () {
+//  group("custom", () {
 //    test("Defining a custom product", () async {
 //      var ds = await util.baseSyncingSample();
 //      Product min = Product.define(ds, (Product p, bool silent) {
@@ -412,7 +412,7 @@ productsTest() {
 //          reason: "custom product calculated the updated minimum");
 //    });
 //
-//    test("Defining a new product on the Miso prototype", () async {
+//    test("defining a new product on the prototype", () async {
 //      var ds = await util.baseSyncingSample();
 //      Product custom = Product.define(ds, (Product p, silent) {
 //        var min = double.INFINITY;
@@ -433,7 +433,7 @@ productsTest() {
 //          reason: "custum product calculated the updated minimum");
 //    });
 //
-//    /*test("Defining a new product a dataset", () async {
+//    /*test("defining a new product a dataset", () async {
 //      var ds = await util.baseSyncingSample();
 //      ds.custom = Product.define(ds, (d) {
 //        var min = double.INFINITY;

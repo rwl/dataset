@@ -2,6 +2,7 @@ part of dataset;
 
 class Remote implements Importer {
   final String _url;
+  Function extract;
 
   /**
    * Responsible for fetching data from a url.
@@ -122,7 +123,7 @@ class Xhr {
 
       settings.ajax.send(settings.data || null);
 
-      return Xhr.httpData(settings);
+//      return Xhr.httpData(settings);
     }
   }
 

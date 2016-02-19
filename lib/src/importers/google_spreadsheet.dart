@@ -1,6 +1,7 @@
 part of dataset;
 
 class GoogleSpreadsheetImporter extends Remote {
+  Function extract;
   /**
    * Import directly from google spreadsheets, see [the Google Spreadsheets
    * guide](http://misoproject.com/dataset/dataset/tutorials/googlespreadsheets).
@@ -25,7 +26,7 @@ class GoogleSpreadsheetImporter extends Remote {
    *                                 guide](http://misoproject.com/dataset/dataset/tutorials/googlespreadsheets)
    *                                 for more information about this flag.
    */
-  GoogleSpreadsheet(options) {
+  GoogleSpreadsheetImporter(options) : super() {
     options = options || {};
     if (options.url) {
       options.url = options.url;
@@ -64,6 +65,6 @@ class GoogleSpreadsheetImporter extends Remote {
 
     this.params = {type: "GET", url: options.url, dataType: "jsonp"};
 
-    return this;
+//    return this;
   }
 }

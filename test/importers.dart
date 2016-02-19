@@ -82,7 +82,7 @@ checkColumnTypesCustomidAttribute(Dataset strictData) {
 }
 
 importersTest() {
-  test("Basic Strict Import through Dataset API", /*47,*/ () {
+  test("basic strict import through dataset API", /*47,*/ () {
     var ds = new Dataset(data: alphabet_strict, strict: true);
     ds.fetch().then((_) {
       verifyImport(alphabet_strict, ds);
@@ -91,9 +91,7 @@ importersTest() {
     });
   });
 
-  test(
-      "Basic Strict Import through Dataset API with custom idAttribute", /*44,*/
-      () {
+  test("basic strict import through dataset API with custom idAttribute", () {
     var ds = new Dataset(
         data: alphabet_strict, strict: true, idAttribute: "character");
     ds.fetch().then((_) {
@@ -103,7 +101,7 @@ importersTest() {
     });
   });
 
-  group("Column creation, coercion & type setting", () {
+  group("column creation, coercion & type setting", () {
     test("Manually creating a column", () {
       var ds = new Dataset(columns: [
         {'name': 'testOne'},
@@ -117,7 +115,7 @@ importersTest() {
           reason: 'testTwo column has time type');
     });
 
-    test("Manual column type override", () {
+    test("manual column type override", () {
       var ds = new Dataset(
           data: alphabet_strict,
           strict: true,
@@ -137,7 +135,7 @@ importersTest() {
       });
     });
 
-    test("Manual column type override", () {
+    test("manual column type override", () {
       var data = new Map.from(alphabet_strict);
       data['columns'][1]['data'] = [];
       for (var i = 0; i < data['columns'][0]['data'].length; i++) {
@@ -159,7 +157,7 @@ importersTest() {
       });
     });
 
-    test("Manual column type override with extra properties", () {
+    test("manual column type override with extra properties", () {
       var ds = new Dataset(data: [
         {'character': '12/31 2012'},
         {'character': '01/31 2011'}
@@ -176,15 +174,15 @@ importersTest() {
     });
   });
 
-  group("Obj Importer", () {
-    test("Convert object to dataset", /*46,*/ () {
+  group("map", () {
+    test("convert map to dataset", () {
       var ds = new Dataset(data: alphabet_obj);
       ds.fetch().then((_) {
         verifyImport(alphabet_obj, ds);
       });
     });
 
-    /*test("Basic json url fetch through Dataset API", /*46,*/ () {
+    /*test("basic json url fetch through dataset API", /*46,*/ () {
       var url = "data/alphabet_strict.json";
       var ds = new Dataset(url: url, jsonp: false, strict: true, ready: (d) {
         verifyImport({}, d);
@@ -193,7 +191,7 @@ importersTest() {
     });
 
     test(
-        "Basic json url fetch through Dataset API with custom idAttribute", /*43,*/
+        "basic json url fetch through dataset API with custom idAttribute", /*43,*/
         () {
       var url = "data/alphabet_strict.json";
       var ds = new Dataset(
@@ -208,7 +206,7 @@ importersTest() {
 //      stop();
     });
 
-    test("Basic json url fetch through Dataset API + url is a function", /*46,*/
+    test("basic json url fetch through dataset API + url is a function", /*46,*/
         () {
       var ds = new Dataset(
           url: () => "data/alphabet_strict.json",
@@ -221,7 +219,7 @@ importersTest() {
 //      stop();
     });
 
-    test("Basic jsonp url fetch with Dataset API", /*46,*/ () {
+    test("basic jsonp url fetch with dataset API", /*46,*/ () {
       var url = "data/alphabet_obj.json?callback=";
       var ds = new Dataset(url: url, jsonp: true, extract: (raw) {
         return raw.data;
@@ -234,7 +232,7 @@ importersTest() {
     });
 
     test(
-        "Basic jsonp url fetch with Dataset API without setting callback=", /*46,*/
+        "basic jsonp url fetch with dataset API without setting callback=", /*46,*/
         () {
       var url = "data/alphabet_obj.json";
       var ds = new Dataset(url: url, jsonp: true, extract: (raw) {
@@ -247,7 +245,7 @@ importersTest() {
 //      stop();
     });
 
-    test("Basic jsonp url fetch with Dataset API setting a callback in the url",
+    test("basic jsonp url fetch with dataset API setting a callback in the url",
         /*46,*/ () {
       var url = "data/alphabet_obj.json?callback=testing";
       var ds = new Dataset(url: url, jsonp: true, extract: (raw) {
@@ -261,7 +259,7 @@ importersTest() {
     });
 
     test(
-        "Basic jsonp url fetch with Dataset API without setting callback param but with other params",
+        "basic jsonp url fetch with dataset API without setting callback param but with other params",
         /*46,*/ () {
       var url = "data/alphabet_obj.json?a=b";
       var ds = new Dataset(url: url, jsonp: true, extract: (raw) {
@@ -274,7 +272,7 @@ importersTest() {
 //      stop();
     });
 
-    test("Basic jsonp url fetch with Dataset API &amp; custom callback", /*47,*/
+    test("basic jsonp url fetch with dataset API & custom callback", /*47,*/
         () {
       var url = "data/alphabet_obj.json?callback=";
       var ds = new Dataset(url: url, jsonp: true, extract: (raw) {
@@ -288,14 +286,14 @@ importersTest() {
 //      stop();
     });*/
 
-    test("Basic delimiter parsing test with Dataset API", /*46,*/ () {
+    test("basic delimiter parsing test with dataset API", /*46,*/ () {
       var ds = new Dataset(data: alphabet_csv, delimiter: ",");
       ds.fetch().then((_) {
         verifyImport(alphabet_strict, ds);
       });
     });
 
-    /*test("Basic delimiter parsing test with Dataset API via url", /*46,*/ () {
+    /*test("basic delimiter parsing test with dataset API via url", /*46,*/ () {
 //      stop();
       var ds = new Dataset(url: "data/alphabet.csv", parser: Delimited);
 
@@ -305,7 +303,7 @@ importersTest() {
       });
     });
 
-    test("Basic delimiter parsing test with custom separator with Dataset API",
+    test("basic delimiter parsing test with custom separator with dataset API",
         /*46,*/ () {
       var ds = new Dataset(data: alphabet_customseparator, delimiter: "###");
       ds.fetch().then((_) {
@@ -314,7 +312,7 @@ importersTest() {
     });
 
     test(
-        "Basic remote delimiter parsing test with custom separator with Dataset API",
+        "basic remote delimiter parsing test with custom separator with dataset API",
         /*46,*/ () {
       var ds = new Dataset(
           url: "data/alphabet_customseparator.json", delimiter: "###");
@@ -325,7 +323,7 @@ importersTest() {
 //      stop();
     });*/
 
-    test("Delimiter empty value override", /*2,*/ () {
+    test("delimiter empty value override", /*2,*/ () {
       var data = "Col1,Col2,Col3\n" + "1,2,3\n" + "1,,5\n" + "5,,4";
 
       var ds = new Dataset(data: data, delimiter: ",", emptyValue: "CAT");
@@ -335,7 +333,7 @@ importersTest() {
       });
     });
 
-    test("Delimiter error catching too many items", /*1,*/ () {
+    test("delimiter error catching too many items", /*1,*/ () {
       var data = "Col1,Col2,Col3\n" + "1,2,3\n" + "1,,4,5\n" + "5,3,4";
 //      try {
       var ds = new Dataset(data: data, delimiter: ",");
@@ -349,7 +347,7 @@ importersTest() {
 //      }
     });
 
-    test("Delimiter skip rows", /*1,*/ () {
+    test("delimiter skip rows", /*1,*/ () {
       var data = "bla bla skip self!\n" +
           "Col1,Col2,Col3\n" +
           "1,2,3\n" +
@@ -377,7 +375,7 @@ importersTest() {
       });
     });
 
-    test("Delimiter error catching not enough items", /*1,*/ () {
+    test("delimiter error catching not enough items", /*1,*/ () {
       var data = "Col1,Col2,Col3\n" + "1,2,3\n" + "1,5\n" + "5,3,4";
 //      try {
       var ds = new Dataset(data: data, delimiter: ",");
@@ -391,7 +389,7 @@ importersTest() {
 //      }
     });
     /*
-    // test("Delimited CR characters caught", 2, () {
+    // test("delimited CR characters caught", 2, () {
     // var ds = new Miso.Dataset({
     // url : "data/offending.csv",
     // delimiter : ","
@@ -407,7 +405,7 @@ importersTest() {
     // });
   });
 
-  group("Google Spreadsheet Support", () {
+  group("google spreadsheet support", () {
     void verifyGoogleSpreadsheet(Dataset d, Map obj) {
       expect(columnPositionByName(d).keys,
           equals(obj['_columnPositionByName'].keys));
@@ -421,7 +419,7 @@ importersTest() {
       }
     }
 
-    test("Google spreadsheet dataset test", () {
+    test("google spreadsheet dataset test", () {
       var key = "0Asnl0xYK7V16dFpFVmZUUy1taXdFbUJGdGtVdFBXbFE";
       var worksheet = "1";
 
@@ -437,7 +435,7 @@ importersTest() {
 //      stop();
     });
 
-    test("Google spreadsheet fast parsing", () {
+    test("google spreadsheet fast parsing", () {
       var key = "0Asnl0xYK7V16dFpFVmZUUy1taXdFbUJGdGtVdFBXbFE";
       var sheetName = "States";
 
@@ -508,7 +506,7 @@ importersTest() {
     });
   });
 
-  group("Polling", () {
+  group("polling", () {
     test("Basic polling importer api", () {
 //      stop();
       var reqs = 5, madereqs = 0;
@@ -538,7 +536,7 @@ importersTest() {
       });
     });
 
-    test("Basic polling non overlapping through dataset api", () {
+    test("basic polling non overlapping through dataset api", () {
 //      stop();
       //expect(18);
 
@@ -598,7 +596,7 @@ importersTest() {
       });
     });
 
-    test("Polling with unique constraint for updates", /*32,*/ () {
+    test("polling with unique constraint for updates", /*32,*/ () {
 //      stop();
 
       int counter, baseCounter, requests = 3, madereqs = 1, expectedSize = 3;
@@ -683,7 +681,7 @@ importersTest() {
       });
     });
 
-    test("Polling with unique constraint", () {
+    test("polling with unique constraint", () {
 //      stop();
       //expect(11);
 
@@ -738,7 +736,7 @@ importersTest() {
       });
     });
 
-    test("Polling with reset on Fetch", () {
+    test("polling with reset on Fetch", () {
 //      stop();
 
       var startId = (Math.random() * 100).floor();

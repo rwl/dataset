@@ -5,8 +5,8 @@ typesTest() {
   var numbers = ['123', '0.34', '.23'];
   var not_numbers = [null, double.NAN];
 
-  group("Dataset Numeric Type", () {
-    test("Check number type", () {
+  group("numeric", () {
+    test("check number type", () {
       var notNumbers = ['a', {}, 'll22'];
 
       numbers.forEach((number) {
@@ -24,7 +24,7 @@ typesTest() {
       });
     });
 
-    test("Check all non numeric values return null on numeric", () {
+    test("check all non numeric values return null on numeric", () {
       types.values.forEach((type) {
         // not checking undefined - we either coerrced it out and can't
         // computationally derive it like a NaN
@@ -40,7 +40,7 @@ typesTest() {
       });
     });
 
-    test("Check all non numeric values return null on coerce", () {
+    test("check all non numeric values return null on coerce", () {
       types.values.forEach((type) {
         not_numbers.forEach((not_a_number) {
           expect(type.coerce(not_a_number), isNull,
@@ -50,7 +50,7 @@ typesTest() {
       });
     });
 
-    test("Coerce number type", () {
+    test("coerce number type", () {
       var coerced = [123, 0.34, 0.23];
       numbers.asMap().forEach((index, value) {
         expect(types['number'].coerce(value), equals(coerced[index]),
@@ -58,7 +58,7 @@ typesTest() {
       });
     });
 
-    test("Coerce to null", () {
+    test("coerce to null", () {
       var coerced = ['foo', null, double.NAN, {}];
       coerced.asMap().forEach((index, _) {
         expect(types['number'].coerce(coerced[index]), isNull,
@@ -66,7 +66,7 @@ typesTest() {
       });
     });
 
-    test("Compare number type", () {
+    test("compare number type", () {
       expect(types['number'].compare(10, 20), equals(-1));
       expect(types['number'].compare(20, 10), equals(1));
       expect(types['number'].compare(10, 10), equals(0));
@@ -77,10 +77,10 @@ typesTest() {
     });
   });
 
-  group("Dataset Boolean Type", () {
+  group("boolean", () {
     var booleans = ['true', 'false', true];
 
-    test("Check boolean type", () {
+    test("check boolean type", () {
       var notBooleans = [1, 'foo', {}];
       booleans.forEach((bool) {
         expect(typeOf(bool), equals("boolean"),
@@ -96,7 +96,7 @@ typesTest() {
       });
     });
 
-    test("Coerce boolean type", () {
+    test("coerce boolean type", () {
       var coerced = [true, false, true];
       booleans.asMap().forEach((index, value) {
         expect(types['boolean'].coerce(value), equals(coerced[index]),
@@ -104,7 +104,7 @@ typesTest() {
       });
     });
 
-    test("Compare boolean type", () {
+    test("compare boolean type", () {
       var results = [0, -1];
       [true, false].asMap().forEach((index, value) {
         expect(types['boolean'].compare(value, true), equals(results[index]),
@@ -112,14 +112,14 @@ typesTest() {
       });
     });
 
-    test("Numeric conversion", () {
+    test("numeric conversion", () {
       expect(types['boolean'].numeric(true), equals(1),
           reason: "True returns 1");
       expect(types['boolean'].numeric(false), equals(0),
           reason: "False returns 0");
     });
 
-    test("Check weird types", () {
+    test("check weird types", () {
       expect(types['string'].compare(null, "a"), equals(-1));
       expect(types['string'].compare("a", null), equals(1));
       expect(types['string'].compare(null, null), equals(0));
@@ -139,8 +139,8 @@ typesTest() {
       expect(types['time'].compare(null, null), equals(0));
     });
   });
-  group("Dataset Time Type", () {
-    test("Check date parsing formats", () {
+  group("time", () {
+    test("check date parsing formats", () {
       var testtimes = [
         {'input': "2011", 'format': "yyyy"},
         {'input': "11", 'format': "yy"},
@@ -184,14 +184,14 @@ typesTest() {
       });
     });
 
-    test("Check date type", () {
+    test("check date type", () {
       expect(types['time'].test("22/22/2001"), isTrue,
           reason: "date in correct format");
       expect(types['time'].test("20"), isFalse,
           reason: "date incorrect format");
     });
 
-    test("Compare date type", () {
+    test("compare date type", () {
       var m = new DateTime(2011, 05, 01);
       var m2 = new DateTime(2011, 05, 05);
       var m3 = new DateTime(2011, 05, 01);
@@ -202,8 +202,8 @@ typesTest() {
     });
   });
 
-  group("Dataset String Type", () {
-    test("Compare string type", () {
+  group("string", () {
+    test("compare string type", () {
       expect(types['string'].compare("A", "B"), equals(-1));
       expect(types['string'].compare("C", "B"), equals(1));
       expect(types['string'].compare("bbb", "bbb"), equals(0));
@@ -213,7 +213,7 @@ typesTest() {
       expect(types['string'].compare("bbb", "bbb"), equals(0));
     });
 
-    test("String type returns 0 or coerced form", () {
+    test("string type returns 0 or coerced form", () {
       expect(types['string'].numeric("A"), isNull);
       expect(types['string'].numeric(null), isNull);
       expect(types['string'].numeric("99"), equals(99));

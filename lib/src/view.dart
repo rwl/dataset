@@ -404,7 +404,7 @@ class DataView {
       var column = this.column(key);
 
       // is this a computed column? if so throw an error
-      if (column.isComputed()) {
+      if (column != null && column.isComputed()) {
         throw "You're trying to update a computed column. Those get computed!";
       }
 
@@ -552,6 +552,15 @@ class DataView {
       rows.add(rowByPosition(i));
     }
     return rows;
+  }
+
+  List<List> toCSV() {
+    return new List.generate(length + 1, (i) {
+      if (i == 0) {
+        return _columns.map((c) => c.name).toList();
+      }
+      return _columns.map((c) => c.data[i - 1]).toList();
+    });
   }
 
   // Products

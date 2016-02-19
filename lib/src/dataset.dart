@@ -4,7 +4,7 @@ import 'dart:math' as math;
 import 'dart:async' show Future, StreamController, Stream;
 
 import 'package:intl/intl.dart' show DateFormat;
-import 'package:quiver/iterables.dart' show range;
+import 'package:quiver/iterables.dart' show range, concat;
 import 'package:csv/csv.dart';
 import 'package:csv/csv_settings_autodetection.dart';
 
@@ -558,7 +558,7 @@ class Dataset extends DataView {
     each((row, rowIndex) {
       if (filter(row)) {
         rowsToRemove.add(row[idAttribute]);
-        deltas.add({'old': row});
+        deltas.add(new Delta._(old: row));
       }
     });
 

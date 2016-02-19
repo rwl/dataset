@@ -4,7 +4,7 @@ import 'package:dataset/dataset.dart';
 import 'package:dataset/test.dart';
 
 derivedTest() {
-  group("CountBy", () {
+  group("countBy", () {
     var countData = {
       'columns': [
         {
@@ -57,7 +57,7 @@ derivedTest() {
       });
     });*/
 
-    test("Counting rows", () {
+    test("counting rows", () {
       new Dataset(data: countData, strict: true).fetch().then((d) {
         var counted = d.countBy('category');
         var aCount = counted.rows((Map row) {
@@ -79,7 +79,7 @@ derivedTest() {
       });
     });
 
-    test("Counting rows with custom idAttribute", () {
+    test("counting rows with custom idAttribute", () {
       new Dataset(data: countData, strict: true, idAttribute: "things")
           .fetch()
           .then((d) {
@@ -104,7 +104,7 @@ derivedTest() {
       });
     });
 
-    test("Counting rows with moment objs", () {
+    test("counting rows with moment objs", () {
       new Dataset(data: [
         {'a': "2002 01 01", 'b': 1},
         {'a': "2002 01 01", 'b': 3}
@@ -120,7 +120,7 @@ derivedTest() {
     });
   });
 
-  group("Moving Average", () {
+  group("moving average", () {
     _mean(Iterable data) => data.reduce((a, b) => a + b) / data.length;
 
     List _movingAvg(List arr, int size, [method(Iterable data)]) {
@@ -157,7 +157,7 @@ derivedTest() {
       };
     }
 
-    test("Basic Moving Average", () {
+    test("basic moving average", () {
       new Dataset(data: getMovingAverageData(), strict: true).fetch().then((d) {
         var ma = d.movingAverage(["A", "B", "C"], 3);
 
@@ -170,7 +170,7 @@ derivedTest() {
       });
     });
 
-    test("Basic Moving Average custom idAttribute", () {
+    test("basic moving average custom idAttribute", () {
       new Dataset(data: getMovingAverageData(), strict: true, idAttribute: "A")
           .fetch()
           .then((d) {
@@ -185,7 +185,7 @@ derivedTest() {
     });
 
     /*test(
-        "Basic Moving Average custom idAttribute should fail when including id col",
+        "basic moving average custom idAttribute should fail when including id col",
         () {
       new Dataset(data: getMovingAverageData(), strict: true, idAttribute: "A")
           .fetch()
@@ -196,7 +196,7 @@ derivedTest() {
       });
     });*/
 
-    test("Single column moving average", () {
+    test("single column moving average", () {
       new Dataset(data: getMovingAverageData(), strict: true).fetch().then((d) {
         var ma = d.movingAverage(["A"], 3);
         equals(ma.length, d.length - 2);
@@ -217,7 +217,7 @@ derivedTest() {
       });
     });
 
-    test("Alternate Method Moving Average", () {
+    test("alternate method moving average", () {
       _variance(List arr) {
         var mean = _mean(arr);
         return _mean(arr.map((x) => math.pow(x - mean, 2)));
@@ -235,7 +235,7 @@ derivedTest() {
       });
     });
 
-    test("Syncing moving average", () {
+    test("syncing moving average", () {
       new Dataset(data: getMovingAverageData(), strict: true, sync: true)
           .fetch()
           .then((d) {
@@ -262,7 +262,7 @@ derivedTest() {
     });
   });
 
-  group("Group By", () {
+  group("groupBy", () {
     getData() {
       return {
         'columns': [
@@ -445,7 +445,7 @@ derivedTest() {
       });
     });
 
-    test("group by with preprocessing of categoeies", () {
+    test("group by with preprocessing of categories", () {
       var ds = new Dataset(data: getData(), strict: true);
 
       ds.fetch().then((_) {
