@@ -510,7 +510,7 @@ class DataView {
   /// License:
   ///     Copyright (c) 2009, Jon Bomgardner.
   ///     This file is licensed under an MIT style license
-  void sort([comparator(a, b), bool silent = false]) {
+  void sort([Comparator<Map> comparator, bool silent = false]) {
     var cachedRows = new List(length);
 
     if (comparator != null) {
