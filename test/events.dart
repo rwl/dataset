@@ -3,14 +3,14 @@ import 'package:dataset/dataset.dart';
 
 eventsTest() {
   test("affectedColumns for add event", () async {
-    var ds = new Dataset(data: {
+    var ds = new Dataset({
       'columns': [
         {
           'name': "one",
           'data': [1, 2]
         }
       ]
-    }, strict: true, sync: true);
+    }, sync: true);
     await ds.fetch().then((d) {
       d.onAdd.listen(expectAsync((event) {
         expect(event.affectedColumns().length, equals(1));
@@ -22,14 +22,14 @@ eventsTest() {
   });
 
   test("affectedColumns for remove event", () async {
-    var ds = new Dataset(data: {
+    var ds = new Dataset({
       'columns': [
         {
           'name': "one",
           'data': [1, 2]
         }
       ]
-    }, strict: true, sync: true);
+    }, sync: true);
     await ds.fetch().then((d) {
       d.onRemove.listen(expectAsync((event) {
         expect(event.affectedColumns().length, equals(1));
@@ -41,14 +41,14 @@ eventsTest() {
   });
 
   test("affectedColumns for update event", () async {
-    var ds = new Dataset(data: {
+    var ds = new Dataset({
       'columns': [
         {
           'name': "one",
           'data': [1, 2]
         }
       ]
-    }, strict: true, sync: true);
+    }, sync: true);
     await ds.fetch().then((d) {
       d.onChange.listen(expectAsync((event) {
         expect(event.affectedColumns().length, equals(1));
@@ -60,7 +60,7 @@ eventsTest() {
   });
 
   test("affectedColumns for update event with custom idAttribute", () async {
-    var ds = new Dataset(data: {
+    var ds = new Dataset({
       'columns': [
         {
           'name': "one",
@@ -71,7 +71,7 @@ eventsTest() {
           'data': [4, 5]
         }
       ]
-    }, idAttribute: "two", strict: true, sync: true);
+    }, idAttribute: "two", sync: true);
     await ds.fetch().then((d) {
       d.onChange.listen(expectAsync((event) {
         expect(event.affectedColumns().length, equals(1));

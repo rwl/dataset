@@ -33,32 +33,89 @@ part 'importers/remote.dart';
 part 'test.dart';
 
 class Dataset extends DataView {
-  Importer importer;
-  Parser parser;
+  static const String _ID = '_id';
+
+  final Importer importer;
+  final Parser parser;
   Function ready;
   bool resetOnFetch;
   String uniqueAgainst;
-//  Function deferred;
   bool fetched = false;
   num interval;
 
-  Dataset(
-      {data,
+  factory Dataset(Map data,
+      {
 
-      /// The url of a remote file or a function returning a string for a
-      /// url containing your data, used for remote importers.
-      url,
+      /// By default all ids are stored in a column called '_id'. If there is
+      /// an alternate column in the dataset that already includes a unique
+      /// identifier, specify its name here. Note that the row objects will no
+      /// longer have an `_id` property.
+      String idAttribute: _ID,
 
       /// Set to true to be able to bind to dataset changes.
       bool sync: false,
 
-      /// If making a jsonp request you can use this parameter to specify
-      /// an alternate callback function name than the one that would be auto
-      /// generated for you.
-      String callback,
+      /// function used to pre-process raw data
+      Function extract,
 
-      /// Whether a remote request should use jsonp to enable cross-domain requests.
-      bool jsonp,
+      /// A function to sort the data by. It will be sorted on fetch and on
+      /// any successive addition.
+      Comparator<Map> comparator,
+
+      /// A way to manually override column type detection. Expects an array
+      /// of objects of the following structure:
+      /// `{ name : 'columnname', type: 'columntype', ...
+      /// (additional params required for type here.) }`
+      List<Map> columns}) {
+    var importer = new Local(data, extract);
+    var parser = new Strict();
+
+    return new Dataset._(
+        data, importer, parser, idAttribute, sync, comparator, columns);
+  }
+
+  factory Dataset.fromRows(List data,
+      {
+
+      /// By default all ids are stored in a column called '_id'. If there is
+      /// an alternate column in the dataset that already includes a unique
+      /// identifier, specify its name here. Note that the row objects will no
+      /// longer have an `_id` property.
+      String idAttribute: _ID,
+
+      /// Set to true to be able to bind to dataset changes.
+      bool sync: false,
+
+      /// function used to pre-process raw data
+      Function extract,
+
+      /// A function to sort the data by. It will be sorted on fetch and on
+      /// any successive addition.
+      Comparator<Map> comparator,
+
+      /// A way to manually override column type detection. Expects an array
+      /// of objects of the following structure:
+      /// `{ name : 'columnname', type: 'columntype', ...
+      /// (additional params required for type here.) }`
+      List<Map> columns}) {
+    var importer = new Local(data, extract);
+    var parser = new Obj();
+
+    return new Dataset._(
+        data, importer, parser, idAttribute, sync, comparator, columns);
+  }
+
+  factory Dataset.delimited(String data,
+      {
+
+      /// By default all ids are stored in a column called '_id'. If there is
+      /// an alternate column in the dataset that already includes a unique
+      /// identifier, specify its name here. Note that the row objects will no
+      /// longer have an `_id` property.
+      String idAttribute: _ID,
+
+      /// Set to true to be able to bind to dataset changes.
+      bool sync: false,
 
       /// When using the [Delimited] parser this is used to set
       /// a custom field delimiter such as `delimiter: '||'` for
@@ -70,34 +127,52 @@ class Dataset extends DataView {
       /// Use the first row of delimited data as column rows.
       bool labeled: true,
 
-      /// Whether to expect the json in our format or whether to interpret
-      /// as raw array of objects; shorthand for using the [Strict] parser.
-      bool strict: false,
-
       /// function used to pre-process raw data
       Function extract,
-
-      /// The callback function to act on once the data is fetched. Isn't
-      /// required for local imports but is required for remote url fetching.
-      ready(Dataset ds),
-
-      /// A way to manually override column type detection. Expects an array
-      /// of objects of the following structure:
-      /// `{ name : 'columnname', type: 'columntype', ...
-      /// (additional params required for type here.) }`
-      List<Map> columns,
 
       /// A function to sort the data by. It will be sorted on fetch and on
       /// any successive addition.
       Comparator<Map> comparator,
 
-      /// Custom importer (passes through auto detection based
-      /// on parameters).
-      Importer importer,
+      /// A way to manually override column type detection. Expects an array
+      /// of objects of the following structure:
+      /// `{ name : 'columnname', type: 'columntype', ...
+      /// (additional params required for type here.) }`
+      List<Map> columns}) {
+    var importer = new Local(data, extract);
+    var parser = new Delimited(
+        delimiter: delimiter,
+        skipRows: skipRows,
+        emptyValue: emptyValue,
+        labeled: labeled);
 
-      /// Custom parser (passes through auto detection based
-      /// on parameters).
-      Parser parser,
+    return new Dataset._(
+        data, importer, parser, idAttribute, sync, comparator, columns);
+  }
+
+  Dataset._(data, this.importer, this.parser, String idAttribute, bool sync,
+      Comparator<Map> comparator, List<Map> columns,
+      {
+
+      /// The url of a remote file or a function returning a string for a
+      /// url containing your data, used for remote importers.
+      url,
+
+      /// If making a jsonp request you can use this parameter to specify
+      /// an alternate callback function name than the one that would be auto
+      /// generated for you.
+      String callback,
+
+      /// Whether a remote request should use jsonp to enable cross-domain requests.
+      bool jsonp,
+
+      /// Whether to expect the json in our format or whether to interpret
+      /// as raw array of objects; shorthand for using the [Strict] parser.
+//      bool strict: false,
+
+      /// The callback function to act on once the data is fetched. Isn't
+      /// required for local imports but is required for remote url fetching.
+      ready(Dataset ds),
 
       /// Set to true if any subsequent fetches after first one should
       /// overwrite the current data.
@@ -108,99 +183,66 @@ class Dataset extends DataView {
 
       /// Polling interval. Set to any value in milliseconds to enable polling
       /// on a url.
-      num interval,
-
-      /// By default all ids are stored in a column called '_id'. If there is
-      /// an alternate column in the dataset that already includes a unique
-      /// identifier, specify its name here. Note that the row objects will no
-      /// longer have an `_id` property.
-      String idAttribute})
-      : super._() {
+      num interval})
+      : super._(idAttribute) {
     length = 0;
 
     _columns = [];
     _columnPositionByName = {};
     _computedColumns = [];
 
-//    this._initialize(options);
-//  }
-//
-//  /// Internal initialization method. Reponsible for data parsing.
-//  _initialize(
-//      Map data,
-//      url,
-//      bool sync,
-//      String callback,
-//      bool jsonp,
-//      String delimiter,
-//      bool strict,
-//      Function extract,
-//      Function ready,
-//      List<ColumnDef> columns,
-//      Function comparator,
-//      Function deferred,
-//      String importer,
-//      String parser,
-//      bool resetOnFetch,
-//      String uniqueAgainst,
-//      num interval,
-//      String idAttribute) {
     // is this a syncable dataset? if so, pull
     // required methods and mark this as a syncable dataset.
     if (sync == true) {
-//      _.extend(this, Miso.Events);
       _setupSync();
       syncable = true;
     } else {
       syncable = false;
     }
 
-    this.idAttribute = idAttribute ?? '_id';
+//    this.idAttribute = idAttribute ?? '_id';
 
     // initialize importer from options or just create a blank
     // one for now, we'll detect it later.
-    this.importer = importer ?? null;
+//    this.importer = importer ?? null;
 
     // default parser is object parser, unless otherwise specified.
-    this.parser = parser ?? new Obj();
+//    this.parser = parser ?? new Obj();
 
     // figure out out if we need another parser.
     if (parser == null) {
-      if (strict) {
-        this.parser = new Strict();
-      } else if (delimiter != null) {
-        this.parser = new Delimited(
-            delimiter: delimiter,
-            skipRows: skipRows,
-            emptyValue: emptyValue,
-            labeled: labeled);
-      }
+      throw new ArgumentError.notNull('parser');
+//      if (strict) {
+//        this.parser = new Strict();
+//      } else if (delimiter != null) {
+//        this.parser = new Delimited(
+//            delimiter: delimiter,
+//            skipRows: skipRows,
+//            emptyValue: emptyValue,
+//            labeled: labeled);
+//      }
     }
 
     // initialize the proper importer
     if (this.importer == null) {
-      if (url != null) {
-        if (interval == null || interval == 0) {
-          this.importer =
-              new Remote(url, extract, _dataType, jsonp, callback, headers);
-        } else {
-          this.importer = new Polling();
-          this.interval = interval;
-        }
-      } else {
-        this.importer = new Local(data, extract);
-      }
+      throw new ArgumentError.notNull('importer');
+//      if (url != null) {
+//        if (interval == null || interval == 0) {
+//          this.importer =
+//              new Remote(url, extract, _dataType, jsonp, callback, headers);
+//        } else {
+//          this.importer = new Polling();
+//          this.interval = interval;
+//        }
+//      } else {
+//        this.importer = new Local(data, extract);
+//      }
     }
 
-    // initialize importer and parser
-//    this.parser = /*new*/ this.parser(options);
-
-    var dataType;
-    if (this.parser is Delimited) {
-      dataType = "text";
-    }
-
-//    this.importer = /*new*/ this.importer(options);
+//    var dataType;
+//    if (this.parser is Delimited) {
+//      dataType = "text";
+//    }
 
     // save comparator if we have one
     if (comparator != null) {
@@ -271,22 +313,12 @@ class Dataset extends DataView {
   /// Allows you to use deferred behavior to potentially chain multiple
   /// datasets.
   Future<Dataset> fetch() {
-//    var dfd = this.deferred;
-
     if (importer == null) {
       throw "No importer defined";
     }
 
     return importer.fetch().then((data) {
-//      try {
       _apply(data);
-//      } catch (e) {
-//        if (options.error) {
-//          options.error.call(this, e);
-//        } else {
-//          throw e;
-//        }
-//      }
 
       // if a comparator was defined, sort the data
       if (comparator != null) {
@@ -297,38 +329,20 @@ class Dataset extends DataView {
         ready(this);
       }
 
-//      if (options.success) {
-//        options.success.call(this);
-//      }
-
-      // Ensure the context of the promise is set to the Dataset
-//      dfd.resolveWith(this, [this]);
       return this;
     });
-    /*, onError: (e) {
-      if (options.error) {
-        options.error.call(this, e);
-      }
-
-      dfd.reject(e);
-    });*/
   }
 
-  //These are the methods that will be used to determine
-  //how to update a dataset's data when fetch() is called
-//    _applications : {
+  // These are the methods that will be used to determine
+  // how to update a dataset's data when fetch() is called
 
   /// Update existing values, used the pass column to match
   /// incoming data to existing rows.
   _againstColumn(Map<String, List<Column>> data) {
-//    var rows = [];
-//    var colNames = data.keys;
-//    var row;
     var uniqName = uniqueAgainst;
     var uniqCol = column(uniqName);
     var toAdd = [];
     var toUpdate = [];
-//    var toRemove = [];
 
     data[uniqName].asMap().forEach((dataIndex, key) {
       var rowIndex = uniqCol.data.indexOf(types[uniqCol.type].coerce(key));
@@ -371,7 +385,6 @@ class Dataset extends DataView {
 
     addAll(rows);
   }
-//    }
 
   /// Takes a dataset and some data and applies one to the other.
   _apply(data) {
@@ -423,7 +436,7 @@ class Dataset extends DataView {
 
   /// Creates a new column that is computationally derived from the rest of
   /// the row.
-  Column addComputedColumn(String name, String type, func(row)) {
+  Column addComputedColumn(String name, String type, func(Map row)) {
     // check if we already ahve a column by this name.
     if (column(name) != null) {
       throw "There is already a column by this name.";
@@ -661,7 +674,6 @@ class Dataset extends DataView {
   /// function that takes a row and returns true if that row should be
   /// removed or false otherwise.
   void update(Map rows, [bool silent = false]) {
-//    var rows = (rowsOrFunction is List) ? rowsOrFunction : [rowsOrFunction];
     var deltas = _arrayUpdate([rows]);
 
     //computer column updates

@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:dataset/dataset.dart';
 
 Future<Dataset> baseSample() {
-  return new Dataset(data: {
+  return new Dataset({
     'columns': [
       {
         'name': "one",
@@ -19,11 +19,11 @@ Future<Dataset> baseSample() {
         'data': [7, 8, 9]
       }
     ]
-  }, strict: true).fetch();
+  }).fetch();
 }
 
 Future<Dataset> baseSampleCustomID() {
-  return new Dataset(data: {
+  return new Dataset({
     'columns': [
       {
         'name': "one",
@@ -38,11 +38,11 @@ Future<Dataset> baseSampleCustomID() {
         'data': [7, 8, 9]
       }
     ]
-  }, strict: true, idAttribute: "one").fetch();
+  }, idAttribute: "one").fetch();
 }
 
 Future<Dataset> baseSyncingSample() {
-  return new Dataset(data: {
+  return new Dataset({
     'columns': [
       {
         'name': "one",
@@ -57,11 +57,11 @@ Future<Dataset> baseSyncingSample() {
         'data': [7, 8, 9]
       }
     ]
-  }, strict: true, sync: true).fetch();
+  }, sync: true).fetch();
 }
 
 Future<Dataset> baseSyncingSampleCustomidAttribute() {
-  return new Dataset(data: {
+  return new Dataset({
     'columns': [
       {
         'name': "one",
@@ -76,5 +76,5 @@ Future<Dataset> baseSyncingSampleCustomidAttribute() {
         'data': [7, 8, 9]
       }
     ]
-  }, idAttribute: "one", strict: true, sync: true).fetch();
+  }, idAttribute: "one", sync: true).fetch();
 }

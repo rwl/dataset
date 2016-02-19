@@ -591,7 +591,7 @@ viewTest() {
     });
 
     test("basic", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': "one",
@@ -606,7 +606,7 @@ viewTest() {
             'data': [7, 8, 9, 1, 1, 1]
           }
         ]
-      }, strict: true);
+      });
 
       ds.comparator = (r1, r2) {
         if (r1['one'] > r2['one']) {
@@ -631,7 +631,7 @@ viewTest() {
     });
 
     test("options param", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': "one",
@@ -646,7 +646,7 @@ viewTest() {
             'data': [7, 8, 9, 1, 1, 1]
           }
         ]
-      }, strict: true);
+      });
 
       ds.fetch().then((_) {
         ds.sort((Map r1, Map r2) {
@@ -669,7 +669,7 @@ viewTest() {
     });
 
     test("setting sort comparator when sorting", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': "one",
@@ -684,7 +684,7 @@ viewTest() {
             'data': [7, 8, 9, 1, 1, 1]
           }
         ]
-      }, strict: true);
+      });
 
       ds.fetch().then((_) {
         ds.sort((Map r1, Map r2) {
@@ -707,7 +707,7 @@ viewTest() {
     });
 
     test("reverse", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': "one",
@@ -722,7 +722,7 @@ viewTest() {
             'data': [7, 8, 9, 1, 1, 1]
           }
         ]
-      }, strict: true);
+      });
 
       ds.comparator = (Map r1, Map r2) {
         if (r1['one'] > r2['one']) {
@@ -746,7 +746,7 @@ viewTest() {
     });
 
     test("init", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': "one",
@@ -769,7 +769,7 @@ viewTest() {
           return 1;
         }
         return 0;
-      }, strict: true);
+      });
       ds.fetch().then((_) {
         expect(columns(ds)[1].data, equals([2, 3, 4, 6, 10, 14].reversed),
             reason: "${columns(ds)[1].data}");
@@ -781,7 +781,7 @@ viewTest() {
     });
 
     test("add row in sorted order", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': "one",
@@ -804,7 +804,7 @@ viewTest() {
           return -1;
         }
         return 0;
-      }, strict: true);
+      });
       ds.fetch().then((_) {
         var l = ds.length;
         ds.add({'one': 5, 'two': 5, 'three': 5});
@@ -816,7 +816,7 @@ viewTest() {
     });
 
     test("add row in reverse sorted order", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': "one",
@@ -839,7 +839,7 @@ viewTest() {
           return 1;
         }
         return 0;
-      }, strict: true);
+      });
 
       ds.fetch().then((_) {
         ds.add({'one': 5, 'two': 5, 'three': 5});
@@ -853,7 +853,7 @@ viewTest() {
 
   group("export", () {
     test("json", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': "one",
@@ -868,7 +868,7 @@ viewTest() {
             'data': [7, 8, 9, 1, 1, 1]
           }
         ]
-      }, strict: true);
+      });
 
       ds.fetch().then((_) {
         var j = ds.toJSON();

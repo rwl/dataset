@@ -58,7 +58,7 @@ derivedTest() {
     });*/
 
     test("counting rows", () {
-      new Dataset(data: countData, strict: true).fetch().then((d) {
+      new Dataset(countData).fetch().then((d) {
         var counted = d.countBy('category');
         var aCount = counted.rows((Map row) {
           return row['category'] == 'a';
@@ -80,7 +80,7 @@ derivedTest() {
     });
 
     test("counting rows with custom idAttribute", () {
-      new Dataset(data: countData, strict: true, idAttribute: "things")
+      new Dataset(countData, idAttribute: "things")
           .fetch()
           .then((d) {
         var counted = d.countBy('category');
@@ -105,7 +105,7 @@ derivedTest() {
     });
 
     test("counting rows with moment objs", () {
-      new Dataset(data: [
+      new Dataset.fromRows([
         {'a': "2002 01 01", 'b': 1},
         {'a': "2002 01 01", 'b': 3}
       ], columns: [
@@ -158,8 +158,8 @@ derivedTest() {
     }
 
     test("basic moving average", () {
-      new Dataset(data: getMovingAverageData(), strict: true).fetch().then((d) {
-        var ma = d.movingAverage(["A", "B", "C"], 3);
+      new Dataset(getMovingAverageData()).fetch().then((d) {
+        var ma = d.movingAverages(["A", "B", "C"], 3);
 
         expect(ma.length, equals(d.length - 2));
         expect(ma.column("A").data, equals(_movingAvg(d.column("A").data, 3)));
@@ -171,10 +171,10 @@ derivedTest() {
     });
 
     test("basic moving average custom idAttribute", () {
-      new Dataset(data: getMovingAverageData(), strict: true, idAttribute: "A")
+      new Dataset(getMovingAverageData(), idAttribute: "A")
           .fetch()
           .then((d) {
-        var ma = d.movingAverage(["B", "C"], 3);
+        var ma = d.movingAverages(["B", "C"], 3);
         equals(ma.length, d.length - 2);
         expect(ma.column("B").data, equals(_movingAvg(d.column("B").data, 3)),
             reason: "Actual ${ma.column("B").data}" +
@@ -197,8 +197,8 @@ derivedTest() {
     });*/
 
     test("single column moving average", () {
-      new Dataset(data: getMovingAverageData(), strict: true).fetch().then((d) {
-        var ma = d.movingAverage(["A"], 3);
+      new Dataset(getMovingAverageData()).fetch().then((d) {
+        var ma = d.movingAverage("A", 3);
         equals(ma.length, d.length - 2);
         expect(ma.column("A").data, equals(_movingAvg(d.column("A").data, 3)));
         expect(ma.column("_id").data,
@@ -223,8 +223,8 @@ derivedTest() {
         return _mean(arr.map((x) => math.pow(x - mean, 2)));
       }
 
-      new Dataset(data: getMovingAverageData(), strict: true).fetch().then((d) {
-        var ma = d.movingAverage(["A", "B", "C"], 3, _variance);
+      new Dataset(getMovingAverageData()).fetch().then((d) {
+        var ma = d.movingAverages(["A", "B", "C"], 3, _variance);
         expect(ma.length, equals(d.length - 2));
         expect(ma.column("A").data,
             equals(_movingAvg(d.column("A").data, 3, _variance)));
@@ -236,10 +236,10 @@ derivedTest() {
     });
 
     test("syncing moving average", () {
-      new Dataset(data: getMovingAverageData(), strict: true, sync: true)
+      new Dataset(getMovingAverageData(), sync: true)
           .fetch()
           .then((d) {
-        var ma = d.movingAverage(["A", "B", "C"], 3);
+        var ma = d.movingAverages(["A", "B", "C"], 3);
         equals(ma.length, d.length - 2);
         expect(ma.column("A").data, equals(_movingAvg(d.column("A").data, 3)));
         expect(ma.column("B").data, equals(_movingAvg(d.column("B").data, 3)));
@@ -286,7 +286,7 @@ derivedTest() {
     }
 
     test("base group by", () {
-      var ds = new Dataset(data: getData(), strict: true);
+      var ds = new Dataset(getData());
 
       ds.fetch().then((_) {
         var groupedData = ds.groupBy("state", ["count", "anothercount"]);
@@ -301,7 +301,7 @@ derivedTest() {
     });
 
     test("base group by with custom idAttribute", () {
-      var ds = new Dataset(data: getData(), strict: true, idAttribute: "count");
+      var ds = new Dataset(getData(), idAttribute: "count");
 
       ds.fetch().then((_) {
         var groupedData = ds.groupBy("state", ["anothercount"]);
@@ -314,7 +314,7 @@ derivedTest() {
     });
 
     test("base group by syncable update", () {
-      var ds = new Dataset(data: getData(), strict: true, sync: true);
+      var ds = new Dataset(getData(), sync: true);
 
       ds.fetch().then((_) {
         var groupedData = ds.groupBy("state", ["count", "anothercount"]);
@@ -334,8 +334,8 @@ derivedTest() {
     });
 
     test("base group by syncable update with custom idAttribute", () {
-      var ds = new Dataset(
-          data: getData(), strict: true, sync: true, idAttribute: "count");
+      var ds =
+          new Dataset(getData(), sync: true, idAttribute: "count");
 
       ds.fetch().then((_) {
         var groupedData = ds.groupBy("state", ["anothercount"]);
@@ -365,7 +365,7 @@ derivedTest() {
     });
 
     test("base group by syncable add (existing category)", () {
-      var ds = new Dataset(data: getData(), strict: true, sync: true);
+      var ds = new Dataset(getData(), sync: true);
 
       ds.fetch().then((_) {
         var groupedData = ds.groupBy("state", ["count", "anothercount"]);
@@ -384,7 +384,7 @@ derivedTest() {
     });
 
     test("base group by syncable add (new category)", () {
-      var ds = new Dataset(data: getData(), strict: true, sync: true);
+      var ds = new Dataset(getData(), sync: true);
 
       ds.fetch().then((_) {
         var groupedData = ds.groupBy("state", ["count", "anothercount"]);
@@ -403,7 +403,7 @@ derivedTest() {
     });
 
     test("base group by syncable remove (remove category)", () {
-      var ds = new Dataset(data: getData(), strict: true, sync: true);
+      var ds = new Dataset(getData(), sync: true);
 
       ds.fetch().then((_) {
         var groupedData = ds.groupBy("state", ["count", "anothercount"]);
@@ -423,7 +423,7 @@ derivedTest() {
     });
 
     test("base group by with diff modifier", () {
-      var ds = new Dataset(data: getData(), strict: true);
+      var ds = new Dataset(getData());
 
       ds.fetch().then((_) {
         var groupedData = ds.groupBy("state", ["count", "anothercount"],
@@ -446,7 +446,7 @@ derivedTest() {
     });
 
     test("group by with preprocessing of categories", () {
-      var ds = new Dataset(data: getData(), strict: true);
+      var ds = new Dataset(getData());
 
       ds.fetch().then((_) {
         Derived groupedData = ds.groupBy("state", ["count", "anothercount"],

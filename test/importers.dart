@@ -83,7 +83,7 @@ checkColumnTypesCustomidAttribute(Dataset strictData) {
 
 importersTest() {
   test("basic strict import through dataset API", /*47,*/ () {
-    var ds = new Dataset(data: alphabet_strict, strict: true);
+    var ds = new Dataset(alphabet_strict);
     ds.fetch().then((_) {
       verifyImport(alphabet_strict, ds);
       expect(ds.columns is Function, isTrue,
@@ -92,8 +92,7 @@ importersTest() {
   });
 
   test("basic strict import through dataset API with custom idAttribute", () {
-    var ds = new Dataset(
-        data: alphabet_strict, strict: true, idAttribute: "character");
+    var ds = new Dataset(alphabet_strict, idAttribute: "character");
     ds.fetch().then((_) {
       verifyImport(alphabet_strict, ds);
       expect(ds.columns is Function, isTrue,
@@ -103,7 +102,7 @@ importersTest() {
 
   group("column creation, coercion & type setting", () {
     test("Manually creating a column", () {
-      var ds = new Dataset(columns: [
+      var ds = new Dataset(null, columns: [
         {'name': 'testOne'},
         {'name': 'testTwo', 'type': 'time'}
       ]);
@@ -116,12 +115,9 @@ importersTest() {
     });
 
     test("manual column type override", () {
-      var ds = new Dataset(
-          data: alphabet_strict,
-          strict: true,
-          columns: [
-            {'name': 'numeric_value', 'type': 'string'}
-          ]);
+      var ds = new Dataset(alphabet_strict, columns: [
+        {'name': 'numeric_value', 'type': 'string'}
+      ]);
       ds.fetch().then((_) {
         expect(columnInternal(ds, 'numeric_value').type, equals("string"),
             reason: "numeric_value is type string");
@@ -142,12 +138,9 @@ importersTest() {
         data['columns'][1]['data'].add(new DateTime.now());
       }
 
-      var ds = new Dataset(
-          data: data,
-          strict: true,
-          columns: [
-            {'name': 'name', 'type': 'time'}
-          ]);
+      var ds = new Dataset(data, columns: [
+        {'name': 'name', 'type': 'time'}
+      ]);
 
       ds.fetch().then((_) {
         expect(columnInternal(ds, 'name').type, equals("time"),
@@ -158,7 +151,7 @@ importersTest() {
     });
 
     test("manual column type override with extra properties", () {
-      var ds = new Dataset(data: [
+      var ds = new Dataset.fromRows([
         {'character': '12/31 2012'},
         {'character': '01/31 2011'}
       ], columns: [
@@ -176,7 +169,7 @@ importersTest() {
 
   group("map", () {
     test("convert map to dataset", () {
-      var ds = new Dataset(data: alphabet_obj);
+      var ds = new Dataset.fromRows(alphabet_obj);
       ds.fetch().then((_) {
         verifyImport(alphabet_obj, ds);
       });
@@ -287,7 +280,7 @@ importersTest() {
     });*/
 
     test("basic delimiter parsing test with dataset API", /*46,*/ () {
-      var ds = new Dataset(data: alphabet_csv, delimiter: ",");
+      var ds = new Dataset.delimited(alphabet_csv, delimiter: ",");
       ds.fetch().then((_) {
         verifyImport(alphabet_strict, ds);
       });
@@ -326,7 +319,7 @@ importersTest() {
     test("delimiter empty value override", /*2,*/ () {
       var data = "Col1,Col2,Col3\n" + "1,2,3\n" + "1,,5\n" + "5,,4";
 
-      var ds = new Dataset(data: data, delimiter: ",", emptyValue: "CAT");
+      var ds = new Dataset.delimited(data, delimiter: ",", emptyValue: "CAT");
       ds.fetch().then((d) {
         expect(ds.column("Col2").data[1], equals("CAT"));
         expect(ds.column("Col2").data[2], equals("CAT"));
@@ -336,7 +329,7 @@ importersTest() {
     test("delimiter error catching too many items", /*1,*/ () {
       var data = "Col1,Col2,Col3\n" + "1,2,3\n" + "1,,4,5\n" + "5,3,4";
 //      try {
-      var ds = new Dataset(data: data, delimiter: ",");
+      var ds = new Dataset.delimited(data, delimiter: ",");
       expect(
           ds.fetch().then((d) {
             expect(d.column("Col2").data[1], isNull);
@@ -353,7 +346,7 @@ importersTest() {
           "1,2,3\n" +
           "1,4,5\n" +
           "5,3,4";
-      var ds = new Dataset(data: data, delimiter: ",", skipRows: 1);
+      var ds = new Dataset.delimited(data, delimiter: ",", skipRows: 1);
 
       ds.fetch().then((_) {
         expect(ds.length, equals(3));
@@ -368,7 +361,7 @@ importersTest() {
           "1,2,3\n" +
           "1,4,5\n" +
           "5,3,4";
-      var ds = new Dataset(data: data, delimiter: ",", skipRows: 3);
+      var ds = new Dataset.delimited(data, delimiter: ",", skipRows: 3);
 
       ds.fetch().then((_) {
         expect(ds.length, equals(3));
@@ -378,7 +371,7 @@ importersTest() {
     test("delimiter error catching not enough items", /*1,*/ () {
       var data = "Col1,Col2,Col3\n" + "1,2,3\n" + "1,5\n" + "5,3,4";
 //      try {
-      var ds = new Dataset(data: data, delimiter: ",");
+      var ds = new Dataset.delimited(data, delimiter: ",");
       expect(
           ds.fetch().then((d) {
             expect(d.column('Col3').data[1], isNull);

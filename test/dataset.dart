@@ -178,12 +178,12 @@ datasetTest() {
 
   group("computed columns", () {
     test("add computed column to empty dataset", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {'name': "one", 'data': []},
           {'name': "two", 'data': []}
         ]
-      }, strict: true);
+      });
 
       ds.fetch().then((_) {
         expect(ds.columnNames(), equals(["one", "two"]));
@@ -197,12 +197,12 @@ datasetTest() {
     });
 
     test("add a computed column with a bogus type - should fail", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {'name': "one", 'data': []},
           {'name': "two", 'data': []}
         ]
-      }, strict: true);
+      });
 
       ds.fetch().then((_) {
         expect(ds.columnNames(), equals(["one", "two"]));
@@ -218,12 +218,12 @@ datasetTest() {
     });
 
     test("add a computed column with a name that already exists", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {'name': "one", 'data': []},
           {'name': "two", 'data': []}
         ]
-      }, strict: true);
+      });
 
       ds.fetch().then((_) {
         expect(ds.columnNames(), equals(["one", "two"]));
@@ -239,7 +239,7 @@ datasetTest() {
     });
 
     test("add computed column to dataset with values", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': "one",
@@ -250,7 +250,7 @@ datasetTest() {
             'data': [10, 20, 30]
           }
         ]
-      }, strict: true);
+      });
 
       ds.fetch().then((_) {
         expect(ds.columnNames(), equals(["one", "two"]));
@@ -265,7 +265,7 @@ datasetTest() {
     });
 
     test("add row to a dataset with one computed column", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': "one",
@@ -276,7 +276,7 @@ datasetTest() {
             'data': [10, 20, 30]
           }
         ]
-      }, strict: true);
+      });
 
       ds.fetch().then((_) {
         expect(ds.columnNames(), equals(["one", "two"]));
@@ -299,7 +299,7 @@ datasetTest() {
     test(
         "add a row to a dataset with multiple computed columns one of which depends on a computed column",
         () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': "one",
@@ -310,7 +310,7 @@ datasetTest() {
             'data': [10, 20, 30]
           }
         ]
-      }, strict: true);
+      });
 
       ds.fetch().then((_) {
         expect(ds.columnNames(), equals(["one", "two"]));
@@ -338,7 +338,7 @@ datasetTest() {
     });
 
     test("can't add a row with a computed column value.", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': "one",
@@ -349,7 +349,7 @@ datasetTest() {
             'data': [10, 20, 30]
           }
         ]
-      }, strict: true);
+      });
 
       ds.fetch().then((_) {
         expect(ds.columnNames(), equals(["one", "two"]));
@@ -378,7 +378,7 @@ datasetTest() {
     });
 
     test("update a row in a dataset with a single computed column", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': "one",
@@ -389,7 +389,7 @@ datasetTest() {
             'data': [10, 20, 30]
           }
         ]
-      }, strict: true);
+      });
 
       ds.fetch().then((_) {
         expect(ds.columnNames(), equals(["one", "two"]));
@@ -411,7 +411,7 @@ datasetTest() {
     });
 
     test("remove row and make sure computed column row is removed too", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': "one",
@@ -422,7 +422,7 @@ datasetTest() {
             'data': [10, 20, 30]
           }
         ]
-      }, strict: true);
+      });
 
       ds.fetch().then((_) {
         expect(ds.columnNames(), equals(["one", "two"]));
@@ -441,7 +441,7 @@ datasetTest() {
     test(
         "check that syncable datasets notify properly of computed columns too during addition",
         () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': "one",
@@ -452,7 +452,7 @@ datasetTest() {
             'data': [10, 20, 30]
           }
         ]
-      }, strict: true, sync: true);
+      }, sync: true);
 
       ds.fetch().then((_) {
         expect(ds.columnNames(), equals(["one", "two"]));
@@ -474,7 +474,7 @@ datasetTest() {
     test(
         "check that syncable datasets notify properly of computed columns too during addition",
         () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': "one",
@@ -485,7 +485,7 @@ datasetTest() {
             'data': [10, 20, 30]
           }
         ]
-      }, strict: true, sync: true);
+      }, sync: true);
 
       ds.fetch().then((_) {
         expect(ds.columnNames(), equals(["one", "two"]));
@@ -506,7 +506,7 @@ datasetTest() {
   });
 
   test("custom idAttribute", () {
-    var ds = new Dataset(data: {
+    var ds = new Dataset({
       'columns': [
         {
           'name': "one",
@@ -517,7 +517,7 @@ datasetTest() {
           'data': [10, 20, 30]
         }
       ]
-    }, strict: true, idAttribute: 'one');
+    }, idAttribute: 'one');
 
     ds.fetch().then((_) {
       expect(ds.rowById(1), equals({'one': 1, 'two': 10}));

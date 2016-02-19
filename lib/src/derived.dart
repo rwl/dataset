@@ -13,12 +13,22 @@ class Derived extends Dataset {
 
   Function _func;
 
-  Derived(this.parent, this.method) : super() {
-    // the id column in a derived dataset is always _id
-    // since there might not be a 1-1 mapping to each row
-    // but could be a 1-* mapping at which point a new id
-    // is needed.
-    idAttribute = "_id";
+  Derived(Dataset parent, this.method)
+      : parent = parent,
+        super._(
+            null,
+            new Local(null, null),
+            new Strict(),
+
+            // the id column in a derived dataset is always _id
+            // since there might not be a 1-1 mapping to each row
+            // but could be a 1-* mapping at which point a new id
+            // is needed.
+            Dataset._ID,
+            parent.syncable,
+            null,
+            null) {
+//    idAttribute = "_id";
 
     _addIdColumn();
 

@@ -12,7 +12,7 @@ class DataView {
 //  var /*Number|Function*/ filterRows;
 
   bool syncable;
-  String idAttribute;
+  final String idAttribute;
   List<Column> _columns;
 
   Map _rowPositionById;
@@ -29,7 +29,7 @@ class DataView {
       _removeCtrl;
   StreamController _resetCtrl, _sortCtrl;
 
-  DataView._()
+  DataView._(this.idAttribute)
       : parent = null,
         filter = null;
 
@@ -39,7 +39,9 @@ class DataView {
   /// place in the original dataset. A [Dataset] also extends from
   /// [DataView]. All the methods available on a dataview will also be
   /// available on the dataset.
-  DataView(this.parent, [filter]) {
+  DataView(Dataset parent, [filter])
+      : parent = parent,
+        idAttribute = parent.idAttribute {
     if (parent == null) {
       throw new ArgumentError.notNull('parent');
     }
@@ -57,7 +59,7 @@ class DataView {
       syncable = false;
     }
 
-    idAttribute = parent.idAttribute;
+//    idAttribute = parent.idAttribute;
 
     // save filter
     this.filter = {};
@@ -336,7 +338,7 @@ class DataView {
 
   /// Iterates over all rows in the dataset. Each row is not a direct
   /// reference to the data and thus should not be altered in any way.
-  each(iterator(row, int i)) {
+  each(iterator(Map row, int i)) {
     for (var i = 0; i < length; i++) {
       iterator(rowByPosition(i), i);
     }
@@ -345,7 +347,7 @@ class DataView {
   /// Iterates over all rows in the dataset in reverse order. Each row is not
   /// a direct reference to the data and thus should not be altered in any
   /// way.
-  reverseEach(iterator(row, int i)) {
+  reverseEach(iterator(Map row, int i)) {
     for (var i = length - 1; i >= 0; i--) {
       iterator(rowByPosition(i), i);
     }
@@ -385,7 +387,7 @@ class DataView {
   }
 
   void _remove(num rowId) {
-    var rowPos = _rowPositionById[rowId];
+    int rowPos = _rowPositionById[rowId];
 
     // remove all values
     _columns.forEach((column) {
@@ -494,7 +496,7 @@ class DataView {
     }
   }
 
-  /// Shorthand for `DataView.where(rows :rowFilter)`. If run with no filter
+  /// Shorthand for `DataView.where(rows: rowFilter)`. If run with no filter
   /// will return all rows.
   DataView rows(filter) => new DataView(this, {'rows': filter});
 
@@ -640,10 +642,13 @@ class DataView {
 
   // Derived Datasets
 
+  Derived movingAverage(String column, int size, [method(row)]) =>
+      movingAverages([column], size, method);
+
   /// Returns a derived dataset in which the specified columns have a moving
   /// average computed over them of a specified [size]. The [method] to apply
   /// to all values in the window defaults to `mean`.
-  Derived movingAverage(columns, int size, [method(row)]) {
+  Derived movingAverages(List<String> columns, int size, [method(row)]) {
     var d =
         new Derived(this, method ?? _mean /*, size: size, args: arguments*/);
 
@@ -663,11 +668,6 @@ class DataView {
 
     // apply with the arguments columns, size, method
     computeMovingAverage() {
-      // normalize columns arg - if single string, to array it.
-      if (columns is String) {
-        columns = [columns];
-      }
-
       // copy the ids
       d.column(d.idAttribute).data = d.parent
           .column(d.parent.idAttribute)

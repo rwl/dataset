@@ -47,7 +47,7 @@ productsTest() {
     });
 
     test("time sum should fail", () {
-      var ds = new Dataset(data: [
+      var ds = new Dataset.fromRows([
         {"one": 1, "t": "2010/01/13"},
         {"one": 5, "t": "2010/05/15"},
         {"one": 10, "t": "2010/01/23"}
@@ -102,7 +102,7 @@ productsTest() {
     });
 
     test("time max product", () async {
-      var ds = await (new Dataset(data: [
+      var ds = await (new Dataset.fromRows([
         {"one": 1, "t": "2010/01/13"},
         {"one": 5, "t": "2010/05/15"},
         {"one": 10, "t": "2010/01/23"}
@@ -116,7 +116,7 @@ productsTest() {
     });
 
     test("time max product non syncable", () {
-      var ds = new Dataset(data: [
+      var ds = new Dataset.fromRows([
         {"one": 1, "t": "2010/01/13"},
         {"one": 5, "t": "2010/05/15"},
         {"one": 10, "t": "2010/01/23"}
@@ -173,7 +173,7 @@ productsTest() {
     });
 
     test("time min product", () {
-      var ds = new Dataset(data: [
+      var ds = new Dataset.fromRows([
         {"one": 1, "t": "2010/01/13"},
         {"one": 5, "t": "2010/05/15"},
         {"one": 10, "t": "2010/01/23"}
@@ -193,7 +193,7 @@ productsTest() {
     });
 
     test("time min product non syncable", /*2,*/ () {
-      var ds = new Dataset(data: [
+      var ds = new Dataset.fromRows([
         {"one": 1, "t": "2010/01/13"},
         {"one": 5, "t": "2010/05/15"},
         {"one": 10, "t": "2010/01/23"}
@@ -209,7 +209,7 @@ productsTest() {
     });
 
     test("basic mean product", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': 'vals',
@@ -224,7 +224,7 @@ productsTest() {
             'data': [19, 4, 233, 40, 10, 39, 23, 47, 5, 22]
           }
         ]
-      }, strict: true, sync: true);
+      }, sync: true);
 
       ds.fetch().then((_) {
         Product m = ds.mean(['vals']);
@@ -258,7 +258,7 @@ productsTest() {
     });
 
     test("basic mean product non syncable", () {
-      var ds = new Dataset(data: {
+      var ds = new Dataset({
         'columns': [
           {
             'name': 'vals',
@@ -273,7 +273,7 @@ productsTest() {
             'data': [19, 4, 233, 40, 10, 39, 23, 47, 5, 22]
           }
         ]
-      }, strict: true);
+      });
 
       ds.fetch().then((_) {
         var m = ds.mean(['vals']);
@@ -298,7 +298,7 @@ productsTest() {
 
     test("basic time mean product", () {
       var fmt = new DateFormat.yMd();
-      var ds = new Dataset(data: [
+      var ds = new Dataset.fromRows([
         {"one": 1, "t": "2010/01/01"},
         {"one": 5, "t": "2010/01/15"},
         {"one": 10, "t": "2010/01/30"}

@@ -34,7 +34,7 @@ columnsTest() {
   });
 
   test("median", () {
-    var ds = new Dataset(data: {
+    var ds = new Dataset({
       'columns': [
         {
           'name': 'vals',
@@ -49,7 +49,7 @@ columnsTest() {
           'data': [19, 4, 233, 40, 10, 39, 23, 47, 5, 22]
         }
       ]
-    }, strict: true);
+    });
     ds.fetch().then((_) {
       expect(columnMedian(ds.column('vals')), equals(5.5));
       expect(columnMedian(ds.column('valsrandomorder')), equals(5.5));
@@ -58,7 +58,7 @@ columnsTest() {
   });
 
   test("mean", () {
-    var ds = new Dataset(data: {
+    var ds = new Dataset({
       'columns': [
         {
           'name': 'vals',
@@ -73,7 +73,7 @@ columnsTest() {
           'data': [19, 4, 233, 40, 10, 39, 23, 47, 5, 22]
         }
       ]
-    }, strict: true);
+    });
     ds.fetch().then((_) {
       expect(columnMean(ds.column('vals')), equals(5.5));
       expect(columnMean(ds.column('valsrandomorder')), equals(5.5));
@@ -82,7 +82,7 @@ columnsTest() {
   });
 
   test("before function", () {
-    var ds = new Dataset(data: {
+    var ds = new Dataset({
       'columns': [
         {
           'name': 'vals',
@@ -91,7 +91,7 @@ columnsTest() {
       ]
     }, columns: [
       {'name': 'vals', 'type': 'number', 'before': (v) => v * 10}
-    ], strict: true);
+    ]);
 
     ds.fetch().then((_) {
       expect(ds.sum(["vals"]), equals(550));
