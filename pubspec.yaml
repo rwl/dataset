@@ -1,8 +1,12 @@
 name: dataset
+version: 0.0.1
 description: Load, parse, sort, filter and query datasets
+author: Richard Lincoln <r.w.lincoln@gmail.com>
+homepage: https://github.com/rwl/dataset
 dependencies:
-  benchmark_harness: any
-  csv: any
-  intl: any
-  quiver: any
+  csv: ">=3.0.1 <4.0.0"
+  intl: ">=0.12.7 <0.13.0"
+  quiver: ">=0.21.4 <0.22.0"
+dev_dependencies:
   test: any
+  benchmark_harness: any
